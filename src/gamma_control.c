@@ -27,3 +27,8 @@ gamma_control_set_gamma(struct wl_listener *listener, void *data) {
 
 	wlr_output_state_finish(&state);
 }
+
+void
+gamma_control_destroy(void) {
+    wl_list_remove(&server.set_gamma.link);
+}

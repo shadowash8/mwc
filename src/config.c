@@ -1250,7 +1250,15 @@ config_reload() {
 
       output->blur = wlr_scene_optimized_blur_create(&server.scene->tree,
                                                      output_box.width, output_box.height);
-      wlr_scene_set_blur_data(server.scene, server.config->blur_params);
+      wlr_scene_set_blur_data(
+          server.scene,
+          server.config->blur_params.num_passes,
+          server.config->blur_params.radius,
+          server.config->blur_params.noise,
+          server.config->blur_params.brightness,
+          server.config->blur_params.contrast,
+          server.config->blur_params.saturation
+      );
       wlr_scene_node_place_above(&output->blur->node, &server.background_tree->node);
       wlr_scene_node_set_position(&output->blur->node, output_box.x, output_box.y);
     }

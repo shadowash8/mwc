@@ -183,3 +183,5 @@ xdg_activation_handle_new_token(struct wl_listener *listener, void *data);
 
 void
 xdg_activation_handle_request(struct wl_listener *listener, void *data);
+
+void xdg_activation_destroy(void);

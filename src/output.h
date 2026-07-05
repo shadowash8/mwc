@@ -74,3 +74,5 @@ output_handle_destroy(struct wl_listener *listener, void *data);
 
 void
 output_move_workspaces(struct mwc_output *dest, struct mwc_output *src);
+
+void output_destroy(void);

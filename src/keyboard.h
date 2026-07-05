@@ -27,3 +27,5 @@ keyboard_handle_destroy(struct wl_listener *listener, void *data);
 
 bool
 keyboard_configure(struct mwc_keyboard *keyboard);
+
+void keyboard_destroy(void);

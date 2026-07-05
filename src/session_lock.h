@@ -36,3 +36,5 @@ session_lock_manager_handle_destroy(struct wl_listener *listener, void *data);
 
 void
 focus_lock_surface(struct mwc_lock_surface *lock_surface);
+
+void session_lock_destroy(void);

@@ -73,6 +73,12 @@ keyboard_handle_destroy(struct wl_listener *listener, void *data) {
 }
 
 void
+keyboard_destroy()
+{
+    wl_list_remove(&server.new_input.link);
+}
+
+void
 server_handle_new_keyboard(struct wlr_input_device *device) {
   struct wlr_keyboard *wlr_keyboard = wlr_keyboard_from_input_device(device);
 

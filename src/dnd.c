@@ -42,6 +42,13 @@ server_handle_destroy_drag(struct wl_listener *listener, void *data) {
 	wlr_scene_node_set_enabled(&server.drag_icon_tree->node, false);
 }
 
+void 
+dnd_destroy()
+{
+    wl_list_remove(&server.request_drag.link);
+    wl_list_remove(&server.request_start_drag.link);
+}
+
 void
 dnd_icons_move(uint32_t x, uint32_t y) {
 	wlr_scene_node_set_position(&server.drag_icon_tree->node, x, y);

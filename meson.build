@@ -66,8 +66,8 @@ inc = [
 
 deps = [
   dependency('wayland-server'),
-  dependency('scenefx-0.2', version: '>=0.2.0', fallback: 'scenefx'),
-  dependency('wlroots-0.18', version: ['>=0.18.0', '<0.19.0'], fallback: 'wlroots'),
+  dependency('scenefx-0.4', version: '>=0.4.0', fallback: 'scenefx'),
+  dependency('wlroots-0.19', version: ['>=0.19.0', '<0.20.0'], fallback: 'wlroots'),
   dependency('xkbcommon'),
   dependency('libinput'),
 ]

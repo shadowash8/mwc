@@ -195,3 +195,10 @@ session_lock_manager_handle_new(struct wl_listener *listener, void *data) {
 
   wlr_session_lock_v1_send_locked(wlr_lock);
 }
+
+void
+session_lock_destroy()
+{
+    wl_list_remove(&server.new_lock.link);
+    wl_list_remove(&server.lock_manager_destroy.link);
+}

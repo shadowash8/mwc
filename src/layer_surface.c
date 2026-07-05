@@ -71,7 +71,7 @@ server_handle_new_layer_surface(struct wl_listener *listener, void *data) {
   wl_signal_add(&wlr_layer_surface->events.new_popup, &layer_surface->new_popup);
 
   layer_surface->destroy.notify = layer_surface_handle_destroy;
-  wl_signal_add(&wlr_layer_surface->surface->events.destroy, &layer_surface->destroy);
+  wl_signal_add(&wlr_layer_surface->events.destroy, &layer_surface->destroy);
 }
 
 void
@@ -199,6 +199,8 @@ void
 layer_surface_handle_destroy(struct wl_listener *listener, void *data) {
   struct mwc_layer_surface *layer_surface = wl_container_of(listener, layer_surface, destroy);
 
+  wl_list_remove(&layer_surface->commit.link);
+  wl_list_remove(&layer_surface->new_popup.link);
   wl_list_remove(&layer_surface->map.link);
   wl_list_remove(&layer_surface->unmap.link);
   wl_list_remove(&layer_surface->destroy.link);

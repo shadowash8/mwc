@@ -352,7 +352,7 @@ main(int argc, char *argv[]) {
 
   wlr_xdg_output_manager_v1_create(server.wl_display, server.output_layout);
   wlr_viewporter_create(server.wl_display);
-	wlr_presentation_create(server.wl_display, server.backend);
+  wlr_presentation_create(server.wl_display, server.backend, 1);
 
   server.kde_decoration_manager = wlr_server_decoration_manager_create(server.wl_display);
   wlr_server_decoration_manager_set_default_mode(server.kde_decoration_manager,
@@ -444,14 +444,36 @@ main(int argc, char *argv[]) {
   /* Once wl_display_run returns, we destroy all clients then shut down the
    * server. */
   wl_display_destroy_clients(server.wl_display);
+  
+  /* listeners on seat/cursor/backend */
+  pointer_destroy();
+  keyboard_destroy();
+  dnd_destroy();
+  
+  /* protocol managers */
+  decoration_destroy();
+  gamma_control_destroy();
+  session_lock_destroy();
+  xdg_activation_destroy();
+  
+  /* shell listeners */
+  wl_list_remove(&server.new_xdg_toplevel.link);
+  wl_list_remove(&server.new_xdg_popup.link);
+  wl_list_remove(&server.new_layer_surface.link);
+  
+  /* backend/output */
+  output_destroy();
+  
   wlr_scene_node_destroy(&server.scene->tree.node);
   wlr_xcursor_manager_destroy(server.cursor_mgr);
   wlr_cursor_destroy(server.cursor);
+  
   wlr_allocator_destroy(server.allocator);
   wlr_renderer_destroy(server.renderer);
   wlr_backend_destroy(server.backend);
+  
   wl_display_destroy(server.wl_display);
-
+  
   config_destroy(server.config);
 
   return 0;

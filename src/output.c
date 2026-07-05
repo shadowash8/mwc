@@ -121,7 +121,15 @@ server_handle_new_output(struct wl_listener *listener, void *data) {
   if(server.config->blur) {
     output->blur = wlr_scene_optimized_blur_create(&server.scene->tree,
                                                    wlr_output->width, wlr_output->height);
-    wlr_scene_set_blur_data(server.scene, server.config->blur_params);
+    wlr_scene_set_blur_data(
+        server.scene,
+        server.config->blur_params.num_passes,
+        server.config->blur_params.radius,
+        server.config->blur_params.noise,
+        server.config->blur_params.brightness,
+        server.config->blur_params.contrast,
+        server.config->blur_params.saturation
+    );
     wlr_scene_node_place_above(&output->blur->node, &server.background_tree->node);
     wlr_scene_node_set_position(&output->blur->node, output_box.x, output_box.y);
   }
@@ -466,3 +474,7 @@ output_handle_destroy(struct wl_listener *listener, void *data) {
   free(output);
 }
 
+void
+output_destroy(void) {
+    wl_list_remove(&server.new_output.link);
+}

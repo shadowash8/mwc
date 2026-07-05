@@ -52,6 +52,24 @@ pointer_handle_destroy(struct wl_listener *listener, void *data) {
   free(pointer);
 }
 
+void
+pointer_destroy(void) {
+    wl_list_remove(&server.cursor_motion.link);
+    wl_list_remove(&server.cursor_motion_absolute.link);
+    wl_list_remove(&server.cursor_button.link);
+    wl_list_remove(&server.cursor_axis.link);
+    wl_list_remove(&server.cursor_frame.link);
+
+    wl_list_remove(&server.request_cursor.link);
+    wl_list_remove(&server.request_set_selection.link);
+
+    wl_list_remove(&server.request_cursor_shape.link);
+    wl_list_remove(&server.cursor_shape_manager_destroy.link);
+
+    wl_list_remove(&server.relative_pointer_manager_destroy.link);
+    wl_list_remove(&server.new_contraint.link);
+}
+
 bool
 pointer_configure(struct mwc_pointer *pointer) {
   if(!wlr_input_device_is_libinput(&pointer->wlr_pointer->base)) return false;

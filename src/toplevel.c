@@ -361,6 +361,8 @@ toplevel_handle_destroy(struct wl_listener *listener, void *data) {
 
   wlr_foreign_toplevel_handle_v1_destroy(toplevel->foreign_toplevel_handle);
 
+  wl_list_remove(&toplevel->set_title.link);
+  wl_list_remove(&toplevel->set_app_id.link);
   wl_list_remove(&toplevel->map.link);
   wl_list_remove(&toplevel->unmap.link);
   wl_list_remove(&toplevel->commit.link);
@@ -376,7 +378,7 @@ toplevel_handle_destroy(struct wl_listener *listener, void *data) {
 struct wlr_box
 toplevel_get_geometry(struct mwc_toplevel *toplevel) {
   struct wlr_box geometry;
-  wlr_xdg_surface_get_geometry(toplevel->xdg_toplevel->base, &geometry);
+  geometry = toplevel->xdg_toplevel->base->current.geometry;
   return geometry;
 }
 
@@ -1112,4 +1114,11 @@ xdg_activation_handle_request(struct wl_listener *listener, void *data) {
   struct mwc_toplevel *toplevel = something->toplevel;
 
   focus_toplevel(toplevel);
+}
+
+void 
+xdg_activation_destroy()
+{
+    wl_list_remove(&server.xdg_activation_request.link);
+    wl_list_remove(&server.xdg_activation_new_token.link);
 }

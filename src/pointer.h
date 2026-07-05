@@ -82,3 +82,5 @@ server_handle_new_relative_pointer(struct wl_listener *listener, void *data);
 
 void
 server_handle_relative_pointer_manager_destroy(struct wl_listener *listener, void *data);
+
+void pointer_destroy(void);
