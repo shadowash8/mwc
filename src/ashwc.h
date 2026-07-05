@@ -26,6 +26,13 @@ enum ashwc_direction {
   ASHWC_LEFT,
 };
 
+enum ashwc_layout {
+    ASHWC_LAYOUT_MASTER,
+    ASHWC_LAYOUT_GRID,
+    ASHWC_LAYOUT_MONOCLE,
+    ASHWC_LAYOUT_COUNT,
+};
+
 struct ashwc_server {
 	struct wl_display *wl_display;
 	struct wl_event_loop *wl_event_loop;

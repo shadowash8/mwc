@@ -5,6 +5,7 @@
 #include "config.h"
 #include "toplevel.h"
 #include "output.h"
+#include "ashwc.h"
 
 #include <wayland-server-protocol.h>
 
@@ -21,6 +22,7 @@ struct ashwc_workspace {
   struct wl_list slaves;
   struct wl_list floating_toplevels;
   struct ashwc_toplevel *fullscreen_toplevel;
+  enum ashwc_layout layout;
 };
 
 void

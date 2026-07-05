@@ -76,10 +76,7 @@ toplevel_is_slave(struct ashwc_toplevel *toplevel) {
 }
 
 void
-layout_set_pending_state(struct ashwc_workspace *workspace) {
-  /* if there is a fullscreened toplevel we just skip */
-  if(workspace->fullscreen_toplevel != NULL) return;
-
+layout_master(struct ashwc_workspace *workspace) {
   /* if there are no masters we are done */
   if(wl_list_empty(&workspace->masters)) return;
 
@@ -129,6 +126,57 @@ layout_set_pending_state(struct ashwc_workspace *workspace) {
     toplevel_set_pending_state(s, slave_x, slave_y, slave_width, slave_height);
     i++;
   }
+}
+
+void
+layout_monocle(struct ashwc_workspace *workspace) {
+    struct ashwc_output *output = workspace->output;
+
+    uint32_t outer = server.config->outer_gaps;
+    uint32_t border = server.config->border_width;
+
+    int x = output->usable_area.x + outer + border;
+    int y = output->usable_area.y + outer + border;
+
+    int width =
+        output->usable_area.width
+        - 2 * outer
+        - 2 * border;
+
+    int height =
+        output->usable_area.height
+        - 2 * outer
+        - 2 * border;
+
+    struct ashwc_toplevel *t;
+
+    wl_list_for_each(t, &workspace->masters, link) {
+        toplevel_set_pending_state(t, x, y, width, height);
+    }
+
+    wl_list_for_each(t, &workspace->slaves, link) {
+        toplevel_set_pending_state(t, x, y, width, height);
+    }
+}
+
+void
+layout_set_pending_state(struct ashwc_workspace *workspace) {
+    if (workspace->fullscreen_toplevel != NULL)
+        return;
+
+    switch (workspace->layout) {
+    case ASHWC_LAYOUT_MASTER:
+        layout_master(workspace);
+        break;
+
+    case ASHWC_LAYOUT_MONOCLE:
+        layout_monocle(workspace);
+        break;
+
+    case ASHWC_LAYOUT_GRID:
+        /* later */
+        break;
+    }
 }
 
 /* this function assumes they are in the same workspace and
@@ -236,3 +284,82 @@ layout_toplevel_at(struct ashwc_workspace *workspace, uint32_t x, uint32_t y) {
   return NULL;
 }
 
+void
+workspace_set_layout(struct ashwc_workspace *workspace,
+                     enum ashwc_layout layout) {
+  if(workspace == NULL) {
+    return;
+  }
+
+  if(workspace->layout == layout) {
+    return;
+  }
+
+  workspace->layout = layout;
+
+  /* Re-arrange tiled windows immediately. */
+  layout_set_pending_state(workspace);
+
+  /* Keep keyboard focus on top. */
+  if(server.focused_toplevel != NULL
+     && server.focused_toplevel->workspace == workspace) {
+    wlr_scene_node_raise_to_top(&server.focused_toplevel->scene_tree->node);
+  }
+}
+
+struct ashwc_toplevel *
+layout_monocle_next(struct ashwc_workspace *workspace,
+                    struct ashwc_toplevel *current)
+{
+    struct wl_list *next = current->link.next;
+
+    if (toplevel_is_master(current)) {
+        if (next == &workspace->masters) {
+            next = workspace->slaves.next;
+        }
+    } else {
+        if (next == &workspace->slaves) {
+            next = workspace->masters.next;
+        }
+    }
+
+    if (next == &workspace->masters || next == &workspace->slaves) {
+        return current;
+    }
+
+    return wl_container_of(next, current, link);
+}
+
+struct ashwc_toplevel *
+layout_monocle_prev(struct ashwc_workspace *workspace,
+                    struct ashwc_toplevel *current)
+{
+    struct wl_list *prev = current->link.prev;
+
+    if (toplevel_is_master(current)) {
+        if (prev == &workspace->masters) {
+            prev = workspace->slaves.prev;
+        }
+    } else {
+        if (prev == &workspace->slaves) {
+            prev = workspace->masters.prev;
+        }
+    }
+
+    if (prev == &workspace->masters || prev == &workspace->slaves) {
+        return current;
+    }
+
+    return wl_container_of(prev, current, link);
+}
+
+void
+layout_monocle_swap(struct ashwc_toplevel *a,
+                    struct ashwc_toplevel *b)
+{
+    if (a == NULL || b == NULL || a == b) {
+        return;
+    }
+
+    layout_swap_tiled_toplevels(a, b);
+}

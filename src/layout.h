@@ -19,6 +19,15 @@ toplevel_is_master(struct ashwc_toplevel *toplevel);
 bool
 toplevel_is_slave(struct ashwc_toplevel *toplevel);
 
+void 
+layout_master(struct ashwc_workspace *);
+
+void 
+layout_monocle(struct ashwc_workspace *);
+
+void 
+layout_set_pending_state(struct ashwc_workspace *);
+
 void
 layout_set_pending_state(struct ashwc_workspace *workspace);
 
@@ -35,3 +44,18 @@ layout_find_closest_tiled_toplevel(struct ashwc_workspace *workspace, bool maste
 struct ashwc_toplevel *
 layout_toplevel_at(struct ashwc_workspace *workspace, uint32_t x, uint32_t y);
 
+void
+workspace_set_layout(struct ashwc_workspace *workspace,
+                     enum ashwc_layout layout);
+
+struct ashwc_toplevel *
+layout_monocle_next(struct ashwc_workspace *workspace,
+                    struct ashwc_toplevel *current);
+
+struct ashwc_toplevel *
+layout_monocle_prev(struct ashwc_workspace *workspace,
+                    struct ashwc_toplevel *current);
+
+void
+layout_monocle_swap(struct ashwc_toplevel *a,
+                    struct ashwc_toplevel *b);

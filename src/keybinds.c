@@ -115,6 +115,32 @@ keybind_prev_workspace(void *data) {
 }
 
 void
+keybind_set_layout(void *data) {
+    enum ashwc_layout layout = (enum ashwc_layout)(uintptr_t)data;
+    workspace_set_layout(server.active_workspace, layout);
+}
+
+void
+keybind_cycle_layout(void *data) {
+  switch (server.active_workspace->layout) {
+  case ASHWC_LAYOUT_MASTER:
+      workspace_set_layout(server.active_workspace, ASHWC_LAYOUT_GRID);
+      break;
+  
+  case ASHWC_LAYOUT_GRID:
+      workspace_set_layout(server.active_workspace, ASHWC_LAYOUT_MONOCLE);
+      break;
+  
+  case ASHWC_LAYOUT_MONOCLE:
+      workspace_set_layout(server.active_workspace, ASHWC_LAYOUT_MASTER);
+      break;
+  
+  default:
+      break;
+  }
+}
+
+void
 keybind_move_focused_toplevel_to_workspace(void *data) {
   struct ashwc_toplevel *toplevel = server.focused_toplevel;
   if(toplevel == NULL || toplevel == server.grabbed_toplevel) return;
@@ -267,6 +293,29 @@ keybind_move_focus(void *data) {
     return;
   }
 
+  if (workspace->layout == ASHWC_LAYOUT_MONOCLE) {
+    struct ashwc_toplevel *other = NULL;
+
+    switch (direction) {
+    case ASHWC_UP:
+    case ASHWC_LEFT:
+      other = layout_monocle_prev(workspace, toplevel);
+        break;
+
+    case ASHWC_DOWN:
+    case ASHWC_RIGHT:
+        other = layout_monocle_next(workspace, toplevel);
+        break;
+    }
+
+    if (other != NULL) {
+        focus_toplevel(other);
+        cursor_jump_focused_toplevel();
+    }
+
+    return;
+}
+
   struct wl_list *next;
   if(toplevel_is_master(toplevel)) {
     switch(direction) {
@@ -371,6 +420,27 @@ keybind_swap_focused_toplevel(void *data) {
     }
     return;
   }
+
+  if (workspace->layout == ASHWC_LAYOUT_MONOCLE) {
+    struct ashwc_toplevel *other = NULL;
+
+    switch (direction) {
+    case ASHWC_UP:
+    case ASHWC_LEFT:
+        other = layout_monocle_prev(workspace, toplevel);
+        break;
+
+    case ASHWC_DOWN:
+    case ASHWC_RIGHT:
+        other = layout_monocle_next(workspace, toplevel);
+        break;
+    }
+
+    if (other != NULL && other != toplevel)
+        layout_swap_tiled_toplevels(toplevel, other);
+
+    return;
+}
 
   struct wl_list *next;
   if(toplevel_is_master(toplevel)) {

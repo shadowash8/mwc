@@ -1,6 +1,7 @@
 #pragma once
 
 #include "helpers.h"
+#include "ashwc.h"
 
 #include <scenefx/types/fx/blur_data.h>
 #include <scenefx/types/fx/corner_location.h>
@@ -152,6 +153,7 @@ struct ashwc_config {
 
   uint32_t master_count;
   double master_ratio;
+  enum ashwc_layout default_layout;
   bool client_side_decorations;
 
   /* animations stuff */

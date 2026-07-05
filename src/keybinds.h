@@ -44,6 +44,12 @@ void
 keybind_prev_workspace(void *data);
 
 void
+keybind_set_layout(void *data);
+
+void
+keybind_cycle_layout(void *data);
+
+void
 keybind_move_focused_toplevel_to_workspace(void *data);
 
 void

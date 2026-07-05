@@ -432,7 +432,7 @@ config_add_keybind(struct ashwc_config *c, char *modifiers, char *key,
     }
     k->action = keybind_change_workspace;
     /* this is going to be overriden by the actual workspace that is needed for change_workspace() */
-    k->args = (void*)atoi(args[0]);
+    k->args = (void *)(uintptr_t)atoi(args[0]);
     k->initialized = false;
   } else if(strcmp(action, "move_to_workspace") == 0) {
     if(arg_count < 1) {
@@ -442,8 +442,28 @@ config_add_keybind(struct ashwc_config *c, char *modifiers, char *key,
     }
     k->action = keybind_move_focused_toplevel_to_workspace;
     /* this is going to be overriden by the actual workspace that is needed for change_workspace() */
-    k->args = (void*)atoi(args[0]);
+    k->args = (void *)(uintptr_t)atoi(args[0]);
     k->initialized = false;
+  } else if(strcmp(action, "layout") == 0) {
+    if(arg_count < 1) {
+        wlr_log(WLR_ERROR, "invalid args to %s", action);
+        free(k);
+        return false;
+    }
+
+    k->action = keybind_set_layout;
+
+    if(strcmp(args[0], "master") == 0) {
+        k->args = (void *)(uintptr_t)ASHWC_LAYOUT_MASTER;
+    } else if(strcmp(args[0], "grid") == 0)   {
+        k->args = (void *)(uintptr_t)ASHWC_LAYOUT_GRID;
+    } else if(strcmp(args[0], "monocle") == 0) {
+        k->args = (void *)(uintptr_t)ASHWC_LAYOUT_MONOCLE;
+    } else {
+        wlr_log(WLR_ERROR, "invalid layout '%s'", args[0]);
+        free(k);
+        return false;
+    }
   } else if(strcmp(action, "next_workspace") == 0) {
     k->action = keybind_next_workspace;
   } else if(strcmp(action, "prev_workspace") == 0) {
@@ -620,6 +640,19 @@ config_handle_value(struct ashwc_config *c, char *keyword, char **args, size_t a
     }
     c->run[c->run_count] = strdup(args[0]);
     c->run_count++;
+  } else if(strcmp(keyword, "default_layout") == 0) {
+    if(arg_count < 1) goto invalid;
+
+    if(strcmp(args[0], "master") == 0) {
+      c->default_layout = ASHWC_LAYOUT_MASTER;
+    } else if(strcmp(args[0], "grid") == 0) {
+      c->default_layout = ASHWC_LAYOUT_GRID;
+    } else if(strcmp(args[0], "monocle") == 0) {
+      c->default_layout = ASHWC_LAYOUT_MONOCLE;
+    } else {
+      wlr_log(WLR_ERROR, "invalid layout '%s'", args[0]);
+      goto invalid;
+    }
   } else if(strcmp(keyword, "keybind") == 0) {
     if(arg_count < 3) goto invalid;
 
@@ -978,6 +1011,9 @@ config_set_default_needed_params(struct ashwc_config *c) {
   if(c->border_radius_location == 0) {
     c->border_radius_location = CORNER_LOCATION_ALL;
     wlr_log(WLR_INFO, "border_radius_location not specified. using all");
+  }
+  if (c->default_layout >= ASHWC_LAYOUT_COUNT) {
+    c->default_layout = ASHWC_LAYOUT_MASTER;
   }
 }
 
