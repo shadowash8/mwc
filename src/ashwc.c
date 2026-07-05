@@ -50,6 +50,7 @@
 #include <wlr/types/wlr_fractional_scale_v1.h>
 #include <wlr/types/wlr_session_lock_v1.h>
 #include <wlr/types/wlr_xdg_activation_v1.h>
+#include <wlr/types/wlr_keyboard_shortcuts_inhibit_v1.h>
 
 /* we initialize an instance of our global state */
 struct ashwc_server server;
@@ -368,6 +369,14 @@ main(int argc, char *argv[]) {
 
   wlr_virtual_pointer_manager_v1_create(server.wl_display);
   wlr_virtual_keyboard_manager_v1_create(server.wl_display);
+  
+  server.keyboard_shortcuts_inhibit =
+    wlr_keyboard_shortcuts_inhibit_v1_create(server.wl_display);
+  server.new_keyboard_shortcuts_inhibitor.notify =
+    server_handle_new_keyboard_shortcuts_inhibitor;
+  wl_signal_add(
+    &server.keyboard_shortcuts_inhibit->events.new_inhibitor,
+    &server.new_keyboard_shortcuts_inhibitor);
 
   server.gamma_control_manager = wlr_gamma_control_manager_v1_create(server.wl_display);
   server.set_gamma.notify = gamma_control_set_gamma;

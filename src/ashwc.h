@@ -13,6 +13,7 @@
 #include <wlr/types/wlr_cursor_shape_v1.h>
 #include <wlr/types/wlr_pointer_constraints_v1.h>
 #include <wlr/types/wlr_relative_pointer_v1.h>
+#include <wlr/types/wlr_keyboard_shortcuts_inhibit_v1.h>
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define min(a, b) ((a) < (b) ? (a) : (b))
@@ -142,6 +143,9 @@ struct ashwc_server {
   struct wlr_xdg_activation_v1 *xdg_activation;
   struct wl_listener xdg_activation_request;
   struct wl_listener xdg_activation_new_token;
+
+  struct wlr_keyboard_shortcuts_inhibit_manager_v1 *keyboard_shortcuts_inhibit;
+  struct wl_listener new_keyboard_shortcuts_inhibitor;
 
   struct ashwc_config *config;
 
