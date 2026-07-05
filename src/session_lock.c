@@ -3,49 +3,49 @@
 #include "layer_surface.h"
 #include "something.h"
 #include "toplevel.h"
-#include "mwc.h"
+#include "ashwc.h"
 #include "rendering.h"
 #include "wlr/util/log.h"
 
 #include <wayland-server-core.h>
 #include <wayland-util.h>
 
-extern struct mwc_server server;
+extern struct ashwc_server server;
 
 void
 lock_surface_handle_map(struct wl_listener *listener, void *data) {
-	struct mwc_lock_surface *lock_surface = wl_container_of(listener, lock_surface, map);
+	struct ashwc_lock_surface *lock_surface = wl_container_of(listener, lock_surface, map);
 
   focus_lock_surface(lock_surface);
 }
 
 void
 lock_surface_handle_unmap(struct wl_listener *listener, void *data) {
-	struct mwc_lock_surface *lock_surface = wl_container_of(listener, lock_surface, unmap);
+	struct ashwc_lock_surface *lock_surface = wl_container_of(listener, lock_surface, unmap);
 
   wl_list_remove(&lock_surface->link);
   /* we pass focus only if the thing is still locked */
   if(lock_surface->lock->locked && !wl_list_empty(&lock_surface->lock->surfaces)) {
-    struct mwc_lock_surface *next = wl_container_of(lock_surface->lock->surfaces.next, next, link);
+    struct ashwc_lock_surface *next = wl_container_of(lock_surface->lock->surfaces.next, next, link);
     focus_lock_surface(next);
   }
 }
 
 void
 lock_surface_handle_destroy(struct wl_listener *listener, void *data) {
-	struct mwc_lock_surface *lock_surface = wl_container_of(listener, lock_surface, destroy);
+	struct ashwc_lock_surface *lock_surface = wl_container_of(listener, lock_surface, destroy);
 
   free(lock_surface);
 }
 
 void
 session_lock_handle_new_surface(struct wl_listener *listener, void *data) {
-	struct mwc_lock *lock = wl_container_of(listener, lock, new_surface);
+	struct ashwc_lock *lock = wl_container_of(listener, lock, new_surface);
 
 	struct wlr_session_lock_surface_v1 *wlr_lock_surface = data;
-  struct mwc_output *output = wlr_lock_surface->output->data;
+  struct ashwc_output *output = wlr_lock_surface->output->data;
 
-  struct mwc_lock_surface *lock_surface = calloc(1, sizeof(*lock_surface));
+  struct ashwc_lock_surface *lock_surface = calloc(1, sizeof(*lock_surface));
   lock_surface->wlr_lock_surface = wlr_lock_surface;
 
   wl_list_insert(&lock->surfaces, &lock_surface->link);
@@ -54,7 +54,7 @@ session_lock_handle_new_surface(struct wl_listener *listener, void *data) {
                                                               wlr_lock_surface->surface);
   wlr_lock_surface->data = lock_surface;
 
-  lock_surface->something.type = MWC_LOCK_SURFACE;
+  lock_surface->something.type = ASHWC_LOCK_SURFACE;
   lock_surface->something.lock_surface = lock_surface;
 
   lock_surface->scene_tree->node.data = &lock_surface->something;
@@ -77,7 +77,7 @@ session_lock_handle_new_surface(struct wl_listener *listener, void *data) {
 }
 
 void
-focus_lock_surface(struct mwc_lock_surface *lock_surface) {
+focus_lock_surface(struct ashwc_lock_surface *lock_surface) {
   struct wlr_keyboard *keyboard = wlr_seat_get_keyboard(server.seat);
   if(keyboard != NULL) {
     wlr_seat_keyboard_notify_enter(server.seat, lock_surface->wlr_lock_surface->surface,
@@ -88,16 +88,16 @@ focus_lock_surface(struct mwc_lock_surface *lock_surface) {
 
 void
 session_lock_handle_unlock(struct wl_listener *listener, void *data) {
-  struct mwc_lock *lock = wl_container_of(listener, lock, unlock);
+  struct ashwc_lock *lock = wl_container_of(listener, lock, unlock);
   lock->locked = false;
   server.lock = NULL;
 
   struct wlr_output *wlr_output = wlr_output_layout_output_at(server.output_layout,
                                                               server.cursor->x, server.cursor->y);
-  struct mwc_output *output = wlr_output->data;
+  struct ashwc_output *output = wlr_output->data;
 
   bool focused = false;
-  struct mwc_layer_surface *l;
+  struct ashwc_layer_surface *l;
   wl_list_for_each(l, &output->layers.overlay, link) {
     if(l->wlr_layer_surface->current.keyboard_interactive) {
       focus_layer_surface(l);
@@ -113,17 +113,17 @@ session_lock_handle_unlock(struct wl_listener *listener, void *data) {
 
   if(!focused) {
     if(!wl_list_empty(&server.active_workspace->masters)) {
-      struct mwc_toplevel *first = wl_container_of(server.active_workspace->masters.next,
+      struct ashwc_toplevel *first = wl_container_of(server.active_workspace->masters.next,
                                                    first, link);
       focus_toplevel(first);
     } else if(!wl_list_empty(&server.active_workspace->floating_toplevels)) {
-      struct mwc_toplevel *first = wl_container_of(server.active_workspace->floating_toplevels.next,
+      struct ashwc_toplevel *first = wl_container_of(server.active_workspace->floating_toplevels.next,
                                                    first, link);
       focus_toplevel(first);
     }
   }
 
-  struct mwc_output *o; 
+  struct ashwc_output *o; 
   wl_list_for_each(o, &server.outputs, link) {
     /* destroy the rectangle blocking the view */
     wlr_scene_node_destroy(&o->session_lock_rect->node);
@@ -133,7 +133,7 @@ session_lock_handle_unlock(struct wl_listener *listener, void *data) {
 
 void
 session_lock_handle_destroy(struct wl_listener *listener, void *data) {
-	struct mwc_lock *lock = wl_container_of(listener, lock, destroy);
+	struct ashwc_lock *lock = wl_container_of(listener, lock, destroy);
 
   if(lock->locked) {
     wlr_log(WLR_ERROR, "lock surface destroyed without being unlocked");
@@ -162,7 +162,7 @@ session_lock_manager_handle_new(struct wl_listener *listener, void *data) {
     return;
   }
 
-  struct mwc_lock *lock = calloc(1, sizeof(*lock));
+  struct ashwc_lock *lock = calloc(1, sizeof(*lock));
   lock->wlr_lock = wlr_lock;
   lock->locked = true;
 
@@ -171,7 +171,7 @@ session_lock_manager_handle_new(struct wl_listener *listener, void *data) {
   server.lock = lock;
 
   float black[4] = { 0.0, 0.0, 0.0, 1.0 };
-  struct mwc_output *o;
+  struct ashwc_output *o;
   wl_list_for_each(o, &server.outputs, link) {
     struct wlr_box output_box;
     wlr_output_layout_get_box(server.output_layout, o->wlr_output, &output_box);

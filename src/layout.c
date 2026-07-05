@@ -1,6 +1,6 @@
 #include "layout.h"
 
-#include "mwc.h"
+#include "ashwc.h"
 #include "config.h"
 #include "toplevel.h"
 #include "wlr/util/box.h"
@@ -9,10 +9,10 @@
 #include <wayland-util.h>
 #include <wlr/types/wlr_scene.h>
 
-extern struct mwc_server server;
+extern struct ashwc_server server;
 
 void
-calculate_masters_dimensions(struct mwc_output *output, uint32_t master_count,
+calculate_masters_dimensions(struct ashwc_output *output, uint32_t master_count,
                              uint32_t slave_count, uint32_t *width, uint32_t *height) {
   uint32_t outer_gaps = server.config->outer_gaps;
   uint32_t inner_gaps = server.config->inner_gaps;
@@ -40,7 +40,7 @@ calculate_masters_dimensions(struct mwc_output *output, uint32_t master_count,
 }
 
 void
-calculate_slaves_dimensions(struct mwc_output *output, uint32_t slave_count,
+calculate_slaves_dimensions(struct ashwc_output *output, uint32_t slave_count,
                             uint32_t *width, uint32_t *height) {
   uint32_t outer_gaps = server.config->outer_gaps;
   uint32_t inner_gaps = server.config->inner_gaps;
@@ -58,8 +58,8 @@ calculate_slaves_dimensions(struct mwc_output *output, uint32_t slave_count,
 }
 
 bool
-toplevel_is_master(struct mwc_toplevel *toplevel) {
-  struct mwc_toplevel *t;
+toplevel_is_master(struct ashwc_toplevel *toplevel) {
+  struct ashwc_toplevel *t;
   wl_list_for_each(t, &toplevel->workspace->masters, link) {
     if(toplevel == t) return true;
   };
@@ -67,8 +67,8 @@ toplevel_is_master(struct mwc_toplevel *toplevel) {
 }
 
 bool
-toplevel_is_slave(struct mwc_toplevel *toplevel) {
-  struct mwc_toplevel *t;
+toplevel_is_slave(struct ashwc_toplevel *toplevel) {
+  struct ashwc_toplevel *t;
   wl_list_for_each(t, &toplevel->workspace->slaves, link) {
     if(toplevel == t) return true;
   };
@@ -76,14 +76,14 @@ toplevel_is_slave(struct mwc_toplevel *toplevel) {
 }
 
 void
-layout_set_pending_state(struct mwc_workspace *workspace) {
+layout_set_pending_state(struct ashwc_workspace *workspace) {
   /* if there is a fullscreened toplevel we just skip */
   if(workspace->fullscreen_toplevel != NULL) return;
 
   /* if there are no masters we are done */
   if(wl_list_empty(&workspace->masters)) return;
 
-  struct mwc_output *output = workspace->output;
+  struct ashwc_output *output = workspace->output;
 
   uint32_t outer_gaps = server.config->outer_gaps;
   uint32_t inner_gaps = server.config->inner_gaps;
@@ -97,7 +97,7 @@ layout_set_pending_state(struct mwc_workspace *workspace) {
   calculate_masters_dimensions(output, master_count, slave_count,
                                &master_width, &master_height);
 
-  struct mwc_toplevel *m;
+  struct ashwc_toplevel *m;
   size_t i = 0;
   wl_list_for_each(m, &workspace->masters, link) {
     uint32_t master_x = output->usable_area.x + outer_gaps
@@ -117,7 +117,7 @@ layout_set_pending_state(struct mwc_workspace *workspace) {
   uint32_t slave_width, slave_height, slave_x, slave_y;
   calculate_slaves_dimensions(workspace->output, slave_count, &slave_width, &slave_height);
 
-  struct mwc_toplevel *s;
+  struct ashwc_toplevel *s;
   i = 0;
   wl_list_for_each(s, &workspace->slaves, link) {
     slave_x = output->usable_area.x + output->usable_area.width * master_ratio
@@ -134,7 +134,7 @@ layout_set_pending_state(struct mwc_workspace *workspace) {
 /* this function assumes they are in the same workspace and
  * that t2 comes after t1 if in the same list */
 void
-layout_swap_tiled_toplevels(struct mwc_toplevel *t1, struct mwc_toplevel *t2) {
+layout_swap_tiled_toplevels(struct ashwc_toplevel *t1, struct ashwc_toplevel *t2) {
   struct wl_list *before_t1 = t1->link.prev;
   wl_list_remove(&t1->link);
   wl_list_insert(&t2->link, &t1->link);
@@ -144,46 +144,46 @@ layout_swap_tiled_toplevels(struct mwc_toplevel *t1, struct mwc_toplevel *t2) {
   layout_set_pending_state(t1->workspace);
 }
 
-struct mwc_toplevel *
-layout_find_closest_tiled_toplevel(struct mwc_workspace *workspace, bool master,
-                                   enum mwc_direction side) {
+struct ashwc_toplevel *
+layout_find_closest_tiled_toplevel(struct ashwc_workspace *workspace, bool master,
+                                   enum ashwc_direction side) {
   /* this means there are no tiled toplevels */
   if(wl_list_empty(&workspace->masters)) return NULL;
 
-  struct mwc_toplevel *first_master = wl_container_of(workspace->masters.next,
+  struct ashwc_toplevel *first_master = wl_container_of(workspace->masters.next,
                                                       first_master, link);
-  struct mwc_toplevel *last_master = wl_container_of(workspace->masters.prev,
+  struct ashwc_toplevel *last_master = wl_container_of(workspace->masters.prev,
                                                      last_master, link);
 
-  struct mwc_toplevel *first_slave = NULL;
-  struct mwc_toplevel *last_slave = NULL;
+  struct ashwc_toplevel *first_slave = NULL;
+  struct ashwc_toplevel *last_slave = NULL;
   if(!wl_list_empty(&workspace->slaves)) {
     first_slave = wl_container_of(workspace->slaves.next, first_slave, link);
     last_slave = wl_container_of(workspace->slaves.prev, last_slave, link);
   }
 
   switch(side) {
-    case MWC_UP: {
+    case ASHWC_UP: {
       if(master || first_slave == NULL) return first_master;
       return first_slave;
     }
-    case MWC_DOWN: {
+    case ASHWC_DOWN: {
       if(master || last_slave == NULL) return first_master;
       return last_slave;
     }
-    case MWC_LEFT: {
+    case ASHWC_LEFT: {
       return first_master;
     }
-    case MWC_RIGHT: {
+    case ASHWC_RIGHT: {
       if(last_slave != NULL) return last_slave;
       return last_master;
     }
   }
 }
 
-struct mwc_toplevel *
-layout_toplevel_at(struct mwc_workspace *workspace, uint32_t x, uint32_t y) {
-  struct mwc_toplevel *t;
+struct ashwc_toplevel *
+layout_toplevel_at(struct ashwc_workspace *workspace, uint32_t x, uint32_t y) {
+  struct ashwc_toplevel *t;
   wl_list_for_each(t, &workspace->masters, link) {
     uint32_t decorations_left = t->link.prev == &workspace->masters
       ? server.config->outer_gaps + server.config->border_width

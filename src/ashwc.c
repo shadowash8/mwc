@@ -2,7 +2,7 @@
 #include <scenefx/render/fx_renderer/fx_renderer.h>
 #include <scenefx/types/wlr_scene.h>
 
-#include "mwc.h"
+#include "ashwc.h"
 
 #include "helpers.h"
 #include "ipc.h"
@@ -52,7 +52,7 @@
 #include <wlr/types/wlr_xdg_activation_v1.h>
 
 /* we initialize an instance of our global state */
-struct mwc_server server;
+struct ashwc_server server;
 
 /* handles child processes */
 void
@@ -72,7 +72,7 @@ server_handle_new_input(struct wl_listener *listener, void *data) {
       server_handle_new_pointer(input);
       break;
     default:
-      /* mwc doesnt support touch devices, drawing tablets etc */
+      /* ashwc doesnt support touch devices, drawing tablets etc */
       break;
   }
 
@@ -126,7 +126,7 @@ void
 server_handle_request_set_selection(struct wl_listener *listener, void *data) {
   /* this event is raised by the seat when a client wants to set the selection,
    * usually when the user copies something. wlroots allows compositors to
-   * ignore such requests if they so choose, but in mwc we always honor
+   * ignore such requests if they so choose, but in ashwc we always honor
    */
   struct wlr_seat_request_set_selection_event *event = data;
   wlr_seat_set_selection(server.seat, event->source, event->serial);
@@ -148,10 +148,10 @@ main(int argc, char *argv[]) {
     }
   }
 
-  mkdir("/tmp/mwc", 0777);
+  mkdir("/tmp/ashwc", 0777);
   if(debug) {
     /* make it so all the logs do to the log file */
-    FILE *logs = fopen("/tmp/mwc/logs", "w");
+    FILE *logs = fopen("/tmp/ashwc/logs", "w");
     if(logs != NULL) {
       int fd = fileno(logs);
       close(1);
@@ -299,7 +299,7 @@ main(int argc, char *argv[]) {
 
   wl_list_init(&server.pointers);
 
-  server.cursor_mode = MWC_CURSOR_PASSTHROUGH;
+  server.cursor_mode = ASHWC_CURSOR_PASSTHROUGH;
   server.cursor_motion.notify = server_handle_cursor_motion;
   wl_signal_add(&server.cursor->events.motion, &server.cursor_motion);
   server.cursor_motion_absolute.notify = server_handle_cursor_motion_absolute;
@@ -436,7 +436,7 @@ main(int argc, char *argv[]) {
   server.running = true;
 
   /* run the wayland event loop. */
-  wlr_log(WLR_INFO, "running mwc on WAYLAND_DISPLAY=%s", socket);
+  wlr_log(WLR_INFO, "running ashwc on WAYLAND_DISPLAY=%s", socket);
   wl_display_run(server.wl_display);
 
   unlink(IPC_PATH);

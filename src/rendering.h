@@ -4,13 +4,13 @@
 #include <wlr/util/box.h>
 #include <wlr/types/wlr_scene.h>
 
-enum mwc_border_state {
-  MWC_BORDER_INVISIBLE,
-  MWC_BORDER_ACTIVE,
-  MWC_BORDER_INACTIVE,
+enum ashwc_border_state {
+  ASHWC_BORDER_INVISIBLE,
+  ASHWC_BORDER_ACTIVE,
+  ASHWC_BORDER_INACTIVE,
 };
 
-struct mwc_animation {
+struct ashwc_animation {
   bool should_animate;
   bool running;
   uint32_t total_frames;
@@ -23,36 +23,36 @@ struct mwc_animation {
 double
 find_animation_curve_at(double t);
 
-struct mwc_toplevel;
+struct ashwc_toplevel;
 
 void
-toplevel_draw_borders(struct mwc_toplevel *toplevel);
+toplevel_draw_borders(struct ashwc_toplevel *toplevel);
 
 void
-toplevel_draw_shadow(struct mwc_toplevel *toplevel);
+toplevel_draw_shadow(struct ashwc_toplevel *toplevel);
 
 void
-toplevel_draw_placeholder(struct mwc_toplevel *toplevel);
+toplevel_draw_placeholder(struct ashwc_toplevel *toplevel);
 
 double
-calculate_animation_passed(struct mwc_animation *animation);
+calculate_animation_passed(struct ashwc_animation *animation);
 
 bool
-toplevel_animation_next_tick(struct mwc_toplevel *toplevel);
+toplevel_animation_next_tick(struct ashwc_toplevel *toplevel);
 
 bool
-toplevel_draw_frame(struct mwc_toplevel *toplevel);
+toplevel_draw_frame(struct ashwc_toplevel *toplevel);
 
 void
-toplevel_apply_clip(struct mwc_toplevel *toplevel);
+toplevel_apply_clip(struct ashwc_toplevel *toplevel);
 
 void
-toplevel_unclip_size(struct mwc_toplevel *toplevel);
+toplevel_unclip_size(struct ashwc_toplevel *toplevel);
 
-struct mwc_workspace;
-
-void
-workspace_draw_frame(struct mwc_workspace *workspace);
+struct ashwc_workspace;
 
 void
-toplevel_apply_effects(struct mwc_toplevel *toplevel);
+workspace_draw_frame(struct ashwc_workspace *workspace);
+
+void
+toplevel_apply_effects(struct ashwc_toplevel *toplevel);

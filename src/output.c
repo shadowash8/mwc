@@ -1,7 +1,7 @@
 #include <scenefx/types/wlr_scene.h>
 #include "output.h"
 
-#include "mwc.h"
+#include "ashwc.h"
 #include "config.h"
 #include "layout.h"
 #include "pointer.h"
@@ -20,7 +20,7 @@
 #include <wlr/types/wlr_scene.h>
 #include <wlr/types/wlr_cursor.h>
 
-extern struct mwc_server server;
+extern struct ashwc_server server;
 
 void
 server_handle_new_output(struct wl_listener *listener, void *data) {
@@ -41,7 +41,7 @@ server_handle_new_output(struct wl_listener *listener, void *data) {
   if(!success) return;
 
   /* allocates and configures our state for this output */
-  struct mwc_output *output = calloc(1, sizeof(*output));
+  struct ashwc_output *output = calloc(1, sizeof(*output));
   output->wlr_output = wlr_output;
 
   wlr_output->data = output;
@@ -75,7 +75,7 @@ server_handle_new_output(struct wl_listener *listener, void *data) {
             "using default workspace 0. please add a valid workspace config.",
             wlr_output->name);
 
-    struct mwc_workspace *workspace = calloc(1, sizeof(*workspace));
+    struct ashwc_workspace *workspace = calloc(1, sizeof(*workspace));
     wl_list_init(&workspace->floating_toplevels);
     wl_list_init(&workspace->masters);
     wl_list_init(&workspace->slaves);
@@ -99,12 +99,12 @@ server_handle_new_output(struct wl_listener *listener, void *data) {
 
   /* if there were some existing workspaces then we reconfigure them */
   if(found) {
-    struct mwc_workspace *w;
+    struct ashwc_workspace *w;
     wl_list_for_each(w, &output->workspaces, link) {
       layout_set_pending_state(w);
       /* this pathces some ghosts that might have been left in the scene */
       if(w != output->active_workspace) {
-        struct mwc_toplevel *t;
+        struct ashwc_toplevel *t;
         wl_list_for_each(t, &w->floating_toplevels, link) {
           wlr_scene_node_set_enabled(&t->scene_tree->node, false);
         }
@@ -140,9 +140,9 @@ server_handle_new_output(struct wl_listener *listener, void *data) {
   }
 }
 
-struct mwc_workspace *
-output_find_owned_workspace(struct mwc_output *output) {
-  struct mwc_workspace *w;
+struct ashwc_workspace *
+output_find_owned_workspace(struct ashwc_output *output) {
+  struct ashwc_workspace *w;
   wl_list_for_each(w, &output->workspaces, link) {
     if(strcmp(w->config->output, output->wlr_output->name) == 0) {
       return w;
@@ -153,18 +153,18 @@ output_find_owned_workspace(struct mwc_output *output) {
 }
 
 bool
-output_transfer_existing_workspaces(struct mwc_output *output) {
+output_transfer_existing_workspaces(struct ashwc_output *output) {
   /* if this output is reconnected then its workspaces are on some other monitor,
    * we try to find it; this is not efficient as things could be flagged, i am just lazy rn */
   bool found = false;
-  struct mwc_output *o;
-  struct mwc_workspace *w, *tmp;
+  struct ashwc_output *o;
+  struct ashwc_workspace *w, *tmp;
   wl_list_for_each(o, &server.outputs, link) {
     wl_list_for_each_safe(w, tmp, &o->workspaces, link) {
       if(w->config != NULL && strcmp(w->config->output, output->wlr_output->name) == 0) {
         /* fix that outputs state */
         if(w == o->active_workspace) {
-          struct mwc_workspace *owned_workspace = output_find_owned_workspace(o);
+          struct ashwc_workspace *owned_workspace = output_find_owned_workspace(o);
           /* it should have had its own workspace */
           assert(owned_workspace != NULL);
           change_workspace(owned_workspace, false);
@@ -186,7 +186,7 @@ output_transfer_existing_workspaces(struct mwc_output *output) {
 }
 
 struct wlr_box
-output_add_to_layout(struct mwc_output *output, struct output_config *config) {
+output_add_to_layout(struct ashwc_output *output, struct output_config *config) {
   struct wlr_output_layout_output *layout;
   if(config != NULL) {
     wlr_log(WLR_INFO, "setting position of output %s to %d, %d",
@@ -284,12 +284,12 @@ output_apply_preffered_mode(struct wlr_output *wlr_output, struct wlr_output_sta
 }
 
 double
-output_frame_duration_ms(struct mwc_output *output) {
+output_frame_duration_ms(struct ashwc_output *output) {
   return 1000000.0 / output->wlr_output->refresh;
 }
 
-struct mwc_output *
-output_get_relative(struct mwc_output *output, enum mwc_direction direction) {
+struct ashwc_output *
+output_get_relative(struct ashwc_output *output, enum ashwc_direction direction) {
   struct wlr_box original_output_box;
   wlr_output_layout_get_box(server.output_layout,
                             output->wlr_output, &original_output_box);
@@ -302,29 +302,29 @@ output_get_relative(struct mwc_output *output, enum mwc_direction direction) {
   uint32_t original_output_midpoint_y =
     original_output_box.y + original_output_box.height / 2;
 
-  struct mwc_output *o;
+  struct ashwc_output *o;
   wl_list_for_each(o, &server.outputs, link) {
     struct wlr_box output_box;
     wlr_output_layout_get_box(server.output_layout, o->wlr_output, &output_box);
     output_box.width *= o->wlr_output->scale;
     output_box.height *= o->wlr_output->scale;
 
-    if(direction == MWC_LEFT &&
+    if(direction == ASHWC_LEFT &&
       original_output_box.x == output_box.x + output_box.width
       && original_output_midpoint_y > output_box.y
       && original_output_midpoint_y < output_box.y + output_box.height) {
       return o;
-    } else if(direction == MWC_RIGHT
+    } else if(direction == ASHWC_RIGHT
       && original_output_box.x + original_output_box.width == output_box.x
       && original_output_midpoint_y > output_box.y
       && original_output_midpoint_y < output_box.y + output_box.height) {
       return o;
-    } else if(direction == MWC_UP
+    } else if(direction == ASHWC_UP
       && original_output_box.y == output_box.y + output_box.height
       && original_output_midpoint_x > output_box.x
       && original_output_midpoint_x < output_box.x + output_box.width) {
       return o;
-    } else if(direction == MWC_DOWN
+    } else if(direction == ASHWC_DOWN
       && original_output_box.y + original_output_box.height == output_box.y
       && original_output_midpoint_x > output_box.x
       && original_output_midpoint_x < output_box.x + output_box.width) {
@@ -336,7 +336,7 @@ output_get_relative(struct mwc_output *output, enum mwc_direction direction) {
 }
 
 void
-cursor_jump_output(struct mwc_output *output) {
+cursor_jump_output(struct ashwc_output *output) {
   struct wlr_box output_box;
   wlr_output_layout_get_box(server.output_layout, output->wlr_output, &output_box);
 
@@ -351,19 +351,19 @@ cursor_jump_output(struct mwc_output *output) {
 }
 
 void
-focus_output(struct mwc_output *output, enum mwc_direction side) {
+focus_output(struct ashwc_output *output, enum ashwc_direction side) {
   assert(output != NULL);
 
   if(server.lock != NULL) {
     if(!wl_list_empty(&server.lock->surfaces)) {
-      struct mwc_lock_surface *l = wl_container_of(server.lock->surfaces.next, l, link);
+      struct ashwc_lock_surface *l = wl_container_of(server.lock->surfaces.next, l, link);
       focus_lock_surface(l);
     }
     return;
   }
 
-  struct mwc_toplevel *focus_next = NULL;
-  struct mwc_workspace *workspace = output->active_workspace;
+  struct ashwc_toplevel *focus_next = NULL;
+  struct ashwc_workspace *workspace = output->active_workspace;
 
   if(workspace->fullscreen_toplevel != NULL) {
     focus_next = workspace->fullscreen_toplevel;
@@ -404,8 +404,8 @@ void
 output_handle_frame(struct wl_listener *listener, void *data) {
   /* this function is called every time an output is ready to display a frame,
    * generally at the output's refresh rate */
-  struct mwc_output *output = wl_container_of(listener, output, frame);
-  struct mwc_workspace *workspace = output->active_workspace;
+  struct ashwc_output *output = wl_container_of(listener, output, frame);
+  struct ashwc_workspace *workspace = output->active_workspace;
 
   workspace_draw_frame(workspace);
 
@@ -425,7 +425,7 @@ output_handle_request_state(struct wl_listener *listener, void *data) {
   /* this function is called when the backend requests a new state for
    * the output. for example, wayland and X11 backends request a new mode
    * when the output window is resized */
-  struct mwc_output *output = wl_container_of(listener, output, request_state);
+  struct ashwc_output *output = wl_container_of(listener, output, request_state);
   const struct wlr_output_event_request_state *event = data;
 
   wlr_output_commit_state(output->wlr_output, event->state);
@@ -433,7 +433,7 @@ output_handle_request_state(struct wl_listener *listener, void *data) {
 
 void
 output_handle_destroy(struct wl_listener *listener, void *data) {
-  struct mwc_output *output = wl_container_of(listener, output, destroy);
+  struct ashwc_output *output = wl_container_of(listener, output, destroy);
 
   /* we want to transfer all the workspaces to a new output;
    * if this was the only output then idk what to do honestly, maybe have a temporary
@@ -445,14 +445,14 @@ output_handle_destroy(struct wl_listener *listener, void *data) {
     }
 
     if(next != &server.outputs) {
-      struct mwc_output *new = wl_container_of(next, new, link);
+      struct ashwc_output *new = wl_container_of(next, new, link);
       bool valid_focus = server.focused_toplevel != NULL
         && server.focused_toplevel->workspace->output != output;
       if(!valid_focus) {
-        focus_output(new, MWC_LEFT);
+        focus_output(new, ASHWC_LEFT);
       }
 
-      struct mwc_workspace *w, *tmp;
+      struct ashwc_workspace *w, *tmp;
       wl_list_for_each_safe(w, tmp, &output->workspaces, link) {
         w->output = new;
         wl_list_remove(&w->link);

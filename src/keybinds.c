@@ -4,7 +4,7 @@
 
 #include "config.h"
 #include "helpers.h"
-#include "mwc.h"
+#include "ashwc.h"
 #include "toplevel.h"
 #include "workspace.h"
 #include "layout.h"
@@ -17,10 +17,10 @@
 #include <wlr/xcursor.h>
 #include <wlr/types/wlr_cursor.h>
 
-extern struct mwc_server server;
+extern struct ashwc_server server;
 
 bool
-server_handle_keybinds(struct mwc_keyboard *keyboard, uint32_t keycode,
+server_handle_keybinds(struct ashwc_keyboard *keyboard, uint32_t keycode,
                        enum wl_keyboard_key_state state) {
   if(server.lock != NULL) return false;
 
@@ -88,44 +88,44 @@ keybind_run(void *data) {
 
 void
 keybind_change_workspace(void *data) {
-  struct mwc_workspace *workspace = data;
+  struct ashwc_workspace *workspace = data;
   change_workspace(workspace, server.grabbed_toplevel != NULL);
 }
 
 void
 keybind_next_workspace(void *data) {
-  struct mwc_workspace *current = server.active_workspace;
+  struct ashwc_workspace *current = server.active_workspace;
   struct wl_list *next = current->link.next;
   if(next == &current->output->workspaces) {
     next = current->output->workspaces.next;
   }
-  struct mwc_workspace *next_workspace = wl_container_of(next, next_workspace, link);
+  struct ashwc_workspace *next_workspace = wl_container_of(next, next_workspace, link);
   change_workspace(next_workspace, server.grabbed_toplevel != NULL);
 }
 
 void
 keybind_prev_workspace(void *data) {
-  struct mwc_workspace *current = server.active_workspace;
+  struct ashwc_workspace *current = server.active_workspace;
   struct wl_list *prev = current->link.prev;
   if(prev == &current->output->workspaces) {
     prev = current->output->workspaces.prev;
   }
-  struct mwc_workspace *prev_workspace = wl_container_of(prev, prev_workspace, link);
+  struct ashwc_workspace *prev_workspace = wl_container_of(prev, prev_workspace, link);
   change_workspace(prev_workspace, server.grabbed_toplevel != NULL);
 }
 
 void
 keybind_move_focused_toplevel_to_workspace(void *data) {
-  struct mwc_toplevel *toplevel = server.focused_toplevel;
+  struct ashwc_toplevel *toplevel = server.focused_toplevel;
   if(toplevel == NULL || toplevel == server.grabbed_toplevel) return;
 
-  struct mwc_workspace *workspace = data;
+  struct ashwc_workspace *workspace = data;
   toplevel_move_to_workspace(toplevel, workspace);
 }
 
 void
 keybind_resize_focused_toplevel(void *data) {
-  struct mwc_toplevel *toplevel = get_pointer_focused_toplevel();
+  struct ashwc_toplevel *toplevel = get_pointer_focused_toplevel();
   if(toplevel == NULL || !toplevel->floating) return;
 
   uint32_t edges = toplevel_get_closest_corner(server.cursor, toplevel);
@@ -153,7 +153,7 @@ void
 keybind_stop_resize_focused_toplevel(void *data) {
   if(server.grabbed_toplevel == NULL) return;
 
-  struct mwc_output *primary_output = 
+  struct ashwc_output *primary_output = 
     toplevel_get_primary_output(server.grabbed_toplevel);
   if(primary_output != server.grabbed_toplevel->workspace->output) {
     server.grabbed_toplevel->workspace = primary_output->active_workspace;
@@ -167,7 +167,7 @@ keybind_stop_resize_focused_toplevel(void *data) {
 
 void
 keybind_move_focused_toplevel(void *data) {
-  struct mwc_toplevel *toplevel = get_pointer_focused_toplevel();
+  struct ashwc_toplevel *toplevel = get_pointer_focused_toplevel();
   if(toplevel == NULL || toplevel->fullscreen) return;
 
   wlr_cursor_set_xcursor(server.cursor, server.cursor_mgr, "hand1");
@@ -184,7 +184,7 @@ keybind_stop_move_focused_toplevel(void *data) {
     toplevel_tiled_insert_into_layout(server.grabbed_toplevel,
                                       server.cursor->x, server.cursor->y);
   } else {
-    struct mwc_output *primary_output = toplevel_get_primary_output(server.grabbed_toplevel);
+    struct ashwc_output *primary_output = toplevel_get_primary_output(server.grabbed_toplevel);
     server.grabbed_toplevel->workspace = primary_output->active_workspace;
     wl_list_insert(&primary_output->active_workspace->floating_toplevels,
                    &server.grabbed_toplevel->link);
@@ -196,7 +196,7 @@ keybind_stop_move_focused_toplevel(void *data) {
 
 void
 keybind_close_keyboard_focused_toplevel(void *data) {
-  struct mwc_toplevel *toplevel = server.focused_toplevel;
+  struct ashwc_toplevel *toplevel = server.focused_toplevel;
   if(toplevel == NULL) return;
 
   wlr_xdg_toplevel_send_close(toplevel->xdg_toplevel);
@@ -206,23 +206,23 @@ void
 keybind_move_focus(void *data) {
   uint64_t direction = (uint64_t)data;
 
-  struct mwc_toplevel *toplevel = server.focused_toplevel;
+  struct ashwc_toplevel *toplevel = server.focused_toplevel;
   /* we need grabbed toplevel toplevel to keep focus */
   if(server.grabbed_toplevel != NULL && toplevel == server.grabbed_toplevel) return;
 
-  enum mwc_direction opposite_side;
+  enum ashwc_direction opposite_side;
   switch(direction) {
-    case MWC_UP:
-      opposite_side = MWC_DOWN;
+    case ASHWC_UP:
+      opposite_side = ASHWC_DOWN;
       break;
-    case MWC_DOWN:
-      opposite_side = MWC_UP;
+    case ASHWC_DOWN:
+      opposite_side = ASHWC_UP;
       break;
-    case MWC_LEFT:
-      opposite_side = MWC_RIGHT;
+    case ASHWC_LEFT:
+      opposite_side = ASHWC_RIGHT;
       break;
-    case MWC_RIGHT:
-      opposite_side = MWC_LEFT;
+    case ASHWC_RIGHT:
+      opposite_side = ASHWC_LEFT;
       break;
   }
 
@@ -231,8 +231,8 @@ keybind_move_focus(void *data) {
   if(toplevel == NULL) {
     struct wlr_output *wlr_output = wlr_output_layout_output_at(
       server.output_layout, server.cursor->x, server.cursor->y);
-    struct mwc_output *output = wlr_output->data;
-    struct mwc_output *relative_output = output_get_relative(output, direction);
+    struct ashwc_output *output = wlr_output->data;
+    struct ashwc_output *relative_output = output_get_relative(output, direction);
     if(relative_output != NULL) {
       focus_output(relative_output, opposite_side);
     }
@@ -240,13 +240,13 @@ keybind_move_focus(void *data) {
   }
 
   /* get the toplevels output */
-  struct mwc_workspace *workspace = toplevel->workspace;
-  struct mwc_output *output = toplevel->workspace->output;
-  struct mwc_output *relative_output =
+  struct ashwc_workspace *workspace = toplevel->workspace;
+  struct ashwc_output *output = toplevel->workspace->output;
+  struct ashwc_output *relative_output =
     output_get_relative(toplevel->workspace->output, direction);
 
   if(toplevel->fullscreen) {
-    struct mwc_output *relative_output = output_get_relative(output, direction);
+    struct ashwc_output *relative_output = output_get_relative(output, direction);
     if(relative_output != NULL) {
       focus_output(relative_output, opposite_side);
     }
@@ -254,13 +254,13 @@ keybind_move_focus(void *data) {
   }
 
   if(toplevel->floating) {
-    struct mwc_toplevel *closest = toplevel_find_closest_floating_on_workspace(toplevel, direction);
+    struct ashwc_toplevel *closest = toplevel_find_closest_floating_on_workspace(toplevel, direction);
     if(closest != NULL) {
       focus_toplevel(closest);
       cursor_jump_focused_toplevel();
       return;
     }
-    struct mwc_output *relative_output = output_get_relative(output, direction);
+    struct ashwc_output *relative_output = output_get_relative(output, direction);
     if(relative_output != NULL) {
       focus_output(relative_output, opposite_side);
     }
@@ -270,7 +270,7 @@ keybind_move_focus(void *data) {
   struct wl_list *next;
   if(toplevel_is_master(toplevel)) {
     switch(direction) {
-      case MWC_RIGHT: {
+      case ASHWC_RIGHT: {
         next = toplevel->link.next;
         if(next == &workspace->masters) {
           next = workspace->slaves.prev;
@@ -281,12 +281,12 @@ keybind_move_focus(void *data) {
             return;
           }
         }
-        struct mwc_toplevel *t = wl_container_of(next, t, link);
+        struct ashwc_toplevel *t = wl_container_of(next, t, link);
         focus_toplevel(t);
         cursor_jump_focused_toplevel();
         return;
       }
-      case MWC_LEFT: {
+      case ASHWC_LEFT: {
         next = toplevel->link.prev;
         if(next == &workspace->masters) {
           if(relative_output != NULL) {
@@ -294,7 +294,7 @@ keybind_move_focus(void *data) {
           }
           return;
         }
-        struct mwc_toplevel *t = wl_container_of(next, t, link);
+        struct ashwc_toplevel *t = wl_container_of(next, t, link);
         focus_toplevel(t);
         cursor_jump_focused_toplevel();
         return;
@@ -310,20 +310,20 @@ keybind_move_focus(void *data) {
 
   /* only case left is that the toplevel is a slave */
   switch(direction) {
-    case MWC_LEFT: {
-      struct mwc_toplevel *last_master =
+    case ASHWC_LEFT: {
+      struct ashwc_toplevel *last_master =
         wl_container_of(workspace->masters.prev, last_master, link);
       focus_toplevel(last_master);
       cursor_jump_focused_toplevel();
       return;
     }
-    case MWC_RIGHT: {
+    case ASHWC_RIGHT: {
       if(relative_output != NULL) {
         focus_output(relative_output, opposite_side);
       }
       return;
     }
-    case MWC_UP: {
+    case ASHWC_UP: {
       struct wl_list *above = toplevel->link.prev;
       if(above == &workspace->slaves) {
         if(relative_output != NULL) {
@@ -331,12 +331,12 @@ keybind_move_focus(void *data) {
         }
         return;
       }
-      struct mwc_toplevel *t = wl_container_of(above, t, link);
+      struct ashwc_toplevel *t = wl_container_of(above, t, link);
       focus_toplevel(t);
       cursor_jump_focused_toplevel();
       return;
     }
-    case MWC_DOWN: {
+    case ASHWC_DOWN: {
       struct wl_list *bellow = toplevel->link.next;
       if(bellow == &workspace->slaves) {
         if(relative_output != NULL) {
@@ -344,7 +344,7 @@ keybind_move_focus(void *data) {
         }
         return;
       }
-      struct mwc_toplevel *t = wl_container_of(bellow, t, link);
+      struct ashwc_toplevel *t = wl_container_of(bellow, t, link);
       focus_toplevel(t);
       cursor_jump_focused_toplevel();
       return;
@@ -357,11 +357,11 @@ void
 keybind_swap_focused_toplevel(void *data) {
   uint64_t direction = (uint64_t)data;
 
-  struct mwc_toplevel *toplevel = server.focused_toplevel;
+  struct ashwc_toplevel *toplevel = server.focused_toplevel;
   if(toplevel == NULL || toplevel == server.grabbed_toplevel) return;
 
-  struct mwc_workspace *workspace = toplevel->workspace;
-  struct mwc_output *relative_output =
+  struct ashwc_workspace *workspace = toplevel->workspace;
+  struct ashwc_output *relative_output =
     output_get_relative(workspace->output, direction);
 
   if(toplevel->floating || toplevel->fullscreen) {
@@ -375,7 +375,7 @@ keybind_swap_focused_toplevel(void *data) {
   struct wl_list *next;
   if(toplevel_is_master(toplevel)) {
     switch(direction) {
-      case MWC_RIGHT: {
+      case ASHWC_RIGHT: {
         next = toplevel->link.next;
         if(next == &workspace->masters) {
           next = workspace->slaves.prev;
@@ -387,11 +387,11 @@ keybind_swap_focused_toplevel(void *data) {
             return;
           }
         }
-        struct mwc_toplevel *t = wl_container_of(next, t, link);
+        struct ashwc_toplevel *t = wl_container_of(next, t, link);
         layout_swap_tiled_toplevels(toplevel, t);
         return;
       }
-      case MWC_LEFT: {
+      case ASHWC_LEFT: {
         next = toplevel->link.prev;
         if(next == &workspace->masters) {
           if(relative_output != NULL
@@ -400,12 +400,12 @@ keybind_swap_focused_toplevel(void *data) {
           }
           return;
         }
-        struct mwc_toplevel *t = wl_container_of(next, t, link);
+        struct ashwc_toplevel *t = wl_container_of(next, t, link);
         layout_swap_tiled_toplevels(t, toplevel);
         return;
       }
       default: {
-        struct mwc_output *relative_output =
+        struct ashwc_output *relative_output =
           output_get_relative(workspace->output, direction);
         if(relative_output != NULL
            && relative_output->active_workspace->fullscreen_toplevel == NULL) {
@@ -417,14 +417,14 @@ keybind_swap_focused_toplevel(void *data) {
   }
 
   switch(direction) {
-    case MWC_LEFT: {
-      struct mwc_toplevel *last_master =
+    case ASHWC_LEFT: {
+      struct ashwc_toplevel *last_master =
         wl_container_of(workspace->masters.prev, last_master, link);
       layout_swap_tiled_toplevels(toplevel, last_master);
       return;
     }
-    case MWC_RIGHT: {
-      struct mwc_output *relative_output =
+    case ASHWC_RIGHT: {
+      struct ashwc_output *relative_output =
         output_get_relative(workspace->output, direction);
       if(relative_output != NULL
          && relative_output->active_workspace->fullscreen_toplevel == NULL) {
@@ -432,7 +432,7 @@ keybind_swap_focused_toplevel(void *data) {
       }
       return;
     }
-    case MWC_UP: {
+    case ASHWC_UP: {
       next = toplevel->link.prev;
       if(next == &workspace->slaves) {
         if(relative_output != NULL
@@ -441,11 +441,11 @@ keybind_swap_focused_toplevel(void *data) {
         }
         return;
       }
-      struct mwc_toplevel *t = wl_container_of(next, t, link);
+      struct ashwc_toplevel *t = wl_container_of(next, t, link);
       layout_swap_tiled_toplevels(t, toplevel);
       return;
     }
-    case MWC_DOWN: {
+    case ASHWC_DOWN: {
       next = toplevel->link.next;
       if(next == &workspace->slaves) {
         if(relative_output != NULL
@@ -454,7 +454,7 @@ keybind_swap_focused_toplevel(void *data) {
         }
         return;
       }
-      struct mwc_toplevel *t = wl_container_of(next, t, link);
+      struct ashwc_toplevel *t = wl_container_of(next, t, link);
       layout_swap_tiled_toplevels(toplevel, t);
       return;
     }
@@ -463,7 +463,7 @@ keybind_swap_focused_toplevel(void *data) {
 
 void
 keybind_focused_toplevel_toggle_floating(void *data) {
-  struct mwc_toplevel *toplevel = server.focused_toplevel;
+  struct ashwc_toplevel *toplevel = server.focused_toplevel;
   if(toplevel == NULL || toplevel->fullscreen || toplevel == server.grabbed_toplevel) return;
 
   if(toplevel->floating) {
@@ -486,7 +486,7 @@ keybind_focused_toplevel_toggle_floating(void *data) {
   toplevel->floating = true;
   if(toplevel_is_master(toplevel)) {
     if(!wl_list_empty(&toplevel->workspace->slaves)) {
-      struct mwc_toplevel *s = wl_container_of(toplevel->workspace->slaves.prev, s, link);
+      struct ashwc_toplevel *s = wl_container_of(toplevel->workspace->slaves.prev, s, link);
       wl_list_remove(&s->link);
       wl_list_insert(toplevel->workspace->masters.prev, &s->link);
     }
@@ -509,7 +509,7 @@ keybind_focused_toplevel_toggle_floating(void *data) {
 
 void
 keybind_focused_toplevel_toggle_fullscreen(void *data) {
-  struct mwc_toplevel *toplevel = server.focused_toplevel;
+  struct ashwc_toplevel *toplevel = server.focused_toplevel;
   if(toplevel == NULL || toplevel == server.grabbed_toplevel) return;
 
   if(toplevel->fullscreen) {

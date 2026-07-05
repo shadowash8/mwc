@@ -5,7 +5,7 @@
 #include "rendering.h"
 
 #include "helpers.h"
-#include "mwc.h"
+#include "ashwc.h"
 #include "config.h"
 #include "something.h"
 #include "toplevel.h"
@@ -20,10 +20,10 @@
 #include <wlr/util/box.h>
 #include <wlr/types/wlr_subcompositor.h>
 
-extern struct mwc_server server;
+extern struct ashwc_server server;
 
 void
-toplevel_draw_borders(struct mwc_toplevel *toplevel) {
+toplevel_draw_borders(struct ashwc_toplevel *toplevel) {
   if(toplevel->border != NULL && toplevel->fullscreen) {
     wlr_scene_node_set_enabled(&toplevel->border->node, false);
     return;
@@ -140,7 +140,7 @@ iter_scene_buffer_apply_effects(struct wlr_scene_buffer *buffer,
 }
 
 void
-toplevel_apply_effects(struct mwc_toplevel *toplevel) {
+toplevel_apply_effects(struct ashwc_toplevel *toplevel) {
   double opacity;
   if(!toplevel->fullscreen || server.config->apply_opacity_when_fullscreen) {
     opacity = toplevel == server.focused_toplevel
@@ -176,7 +176,7 @@ toplevel_apply_effects(struct mwc_toplevel *toplevel) {
 }
 
 void
-toplevel_apply_clip(struct mwc_toplevel *toplevel) {
+toplevel_apply_clip(struct ashwc_toplevel *toplevel) {
   uint32_t width, height;
   toplevel_get_actual_size(toplevel, &width, &height);
 
@@ -192,8 +192,8 @@ toplevel_apply_clip(struct mwc_toplevel *toplevel) {
 
   struct wlr_scene_node *n;
   wl_list_for_each(n, &toplevel->scene_tree->children, link) {
-    struct mwc_something *view = n->data;
-    if(view != NULL && view->type == MWC_POPUP) {
+    struct ashwc_something *view = n->data;
+    if(view != NULL && view->type == ASHWC_POPUP) {
       wlr_scene_subsurface_tree_set_clip(n, NULL);
     }
   }
@@ -218,7 +218,7 @@ find_animation_curve_at(double t) {
 }
 
 bool
-toplevel_animation_next_tick(struct mwc_toplevel *toplevel) {
+toplevel_animation_next_tick(struct ashwc_toplevel *toplevel) {
   double animation_passed =
     (double)toplevel->animation.passed_frames / toplevel->animation.total_frames;
   double factor = find_animation_curve_at(animation_passed);
@@ -252,7 +252,7 @@ toplevel_animation_next_tick(struct mwc_toplevel *toplevel) {
 }
 
 void
-toplevel_draw_shadow(struct mwc_toplevel *toplevel) {
+toplevel_draw_shadow(struct ashwc_toplevel *toplevel) {
   if(toplevel->shadow != NULL && toplevel->fullscreen) {
     wlr_scene_node_set_enabled(&toplevel->shadow->node, false);
     return;
@@ -307,7 +307,7 @@ toplevel_draw_shadow(struct mwc_toplevel *toplevel) {
 }
 
 bool
-toplevel_draw_frame(struct mwc_toplevel *toplevel) {
+toplevel_draw_frame(struct ashwc_toplevel *toplevel) {
   bool need_more_frames = false;
   if(toplevel->animation.running) {
     if(toplevel_animation_next_tick(toplevel)) {
@@ -331,13 +331,13 @@ toplevel_draw_frame(struct mwc_toplevel *toplevel) {
 }
 
 void
-workspace_draw_frame(struct mwc_workspace *workspace) {
+workspace_draw_frame(struct ashwc_workspace *workspace) {
   if(server.grabbed_toplevel != NULL) {
     toplevel_draw_frame(server.grabbed_toplevel);
   }
 
   bool need_more_frames = false;
-  struct mwc_toplevel *t;
+  struct ashwc_toplevel *t;
   if(workspace->fullscreen_toplevel != NULL) {
     if(toplevel_draw_frame(workspace->fullscreen_toplevel)) {
       need_more_frames = true;

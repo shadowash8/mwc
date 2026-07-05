@@ -45,7 +45,7 @@ int
 main(int argc, char *argv[]) {
   if(argc < 2 || strcmp(argv[1], "-h") == 0) {
     fprintf(stderr,
-            "usage: mwc-ipc message\n"
+            "usage: ashwc-ipc message\n"
             "where message is one of\n"
             "  subscribe - receive all the events from the compositor\n"
             "  toplevels - list app_ids and titles of all the toplevels\n"

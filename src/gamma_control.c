@@ -1,10 +1,10 @@
 #include "gamma_control.h"
 
-#include "mwc.h"
+#include "ashwc.h"
 
 #include <wlr/types/wlr_output.h>
 
-extern struct mwc_server server;
+extern struct ashwc_server server;
 
 void
 gamma_control_set_gamma(struct wl_listener *listener, void *data) {

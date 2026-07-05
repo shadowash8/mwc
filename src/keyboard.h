@@ -2,7 +2,7 @@
 
 #include <wlr/types/wlr_keyboard.h>
 
-struct mwc_keyboard {
+struct ashwc_keyboard {
 	struct wl_list link;
 	struct wlr_keyboard *wlr_keyboard;
   /* used for getting raw keysyms for keybinds */
@@ -26,6 +26,6 @@ void
 keyboard_handle_destroy(struct wl_listener *listener, void *data);
 
 bool
-keyboard_configure(struct mwc_keyboard *keyboard);
+keyboard_configure(struct ashwc_keyboard *keyboard);
 
 void keyboard_destroy(void);

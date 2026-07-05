@@ -4,7 +4,7 @@
 #include <wayland-server-core.h>
 #include <wlr/types/wlr_session_lock_v1.h>
 
-struct mwc_lock {
+struct ashwc_lock {
   struct wlr_session_lock_v1 *wlr_lock;
   bool locked;
 
@@ -15,11 +15,11 @@ struct mwc_lock {
   struct wl_listener destroy;
 };
 
-struct mwc_lock_surface {
+struct ashwc_lock_surface {
   struct wlr_session_lock_surface_v1 *wlr_lock_surface;
   struct wlr_scene_tree *scene_tree;
-  struct mwc_something something;
-  struct mwc_lock *lock;
+  struct ashwc_something something;
+  struct ashwc_lock *lock;
 
   struct wl_list link;
 
@@ -35,6 +35,6 @@ void
 session_lock_manager_handle_destroy(struct wl_listener *listener, void *data);
 
 void
-focus_lock_surface(struct mwc_lock_surface *lock_surface);
+focus_lock_surface(struct ashwc_lock_surface *lock_surface);
 
 void session_lock_destroy(void);

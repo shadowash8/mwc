@@ -3,7 +3,7 @@
 #include "workspace.h"
 
 #include "layout.h"
-#include "mwc.h"
+#include "ashwc.h"
 #include "ipc.h"
 #include "keybinds.h"
 #include "layer_surface.h"
@@ -12,11 +12,11 @@
 #include <assert.h>
 #include <stdlib.h>
 
-extern struct mwc_server server;
+extern struct ashwc_server server;
 
 void
-workspace_create_for_output(struct mwc_output *output, struct workspace_config *config) {
-  struct mwc_workspace *workspace = calloc(1, sizeof(*workspace));
+workspace_create_for_output(struct ashwc_output *output, struct workspace_config *config) {
+  struct ashwc_workspace *workspace = calloc(1, sizeof(*workspace));
 
   wl_list_init(&workspace->floating_toplevels);
   wl_list_init(&workspace->masters);
@@ -50,7 +50,7 @@ workspace_create_for_output(struct mwc_output *output, struct workspace_config *
 }
 
 void
-change_workspace(struct mwc_workspace *workspace, bool keep_focus) {
+change_workspace(struct ashwc_workspace *workspace, bool keep_focus) {
   /* if it is the same as global active workspace, do nothing */
   if(server.active_workspace == workspace) return;
 
@@ -61,10 +61,10 @@ change_workspace(struct mwc_workspace *workspace, bool keep_focus) {
     } else if(workspace->fullscreen_toplevel != NULL) {
       focus_toplevel(workspace->fullscreen_toplevel);
     } else if(!wl_list_empty(&workspace->masters)) {
-      struct mwc_toplevel *t = wl_container_of(workspace->masters.next, t, link);
+      struct ashwc_toplevel *t = wl_container_of(workspace->masters.next, t, link);
       focus_toplevel(t);
     } else if(!wl_list_empty(&workspace->floating_toplevels)) {
-      struct mwc_toplevel *t = wl_container_of(workspace->floating_toplevels.next, t, link);
+      struct ashwc_toplevel *t = wl_container_of(workspace->floating_toplevels.next, t, link);
       focus_toplevel(t);
     } else {
       unfocus_focused_toplevel();
@@ -77,7 +77,7 @@ change_workspace(struct mwc_workspace *workspace, bool keep_focus) {
   }
 
   /* else remove all the toplevels on that workspace */
-  struct mwc_toplevel *t;
+  struct ashwc_toplevel *t;
   wl_list_for_each(t, &workspace->output->active_workspace->floating_toplevels, link) {
     wlr_scene_node_set_enabled(&t->scene_tree->node, false);
   }
@@ -124,10 +124,10 @@ change_workspace(struct mwc_workspace *workspace, bool keep_focus) {
   } else if(keep_focus) {
     return;
   } else if(!wl_list_empty(&workspace->masters)) {
-    struct mwc_toplevel *t = wl_container_of(workspace->masters.next, t, link);
+    struct ashwc_toplevel *t = wl_container_of(workspace->masters.next, t, link);
     focus_toplevel(t);
   } else if(!wl_list_empty(&workspace->floating_toplevels)) {
-    struct mwc_toplevel *t = wl_container_of(workspace->floating_toplevels.next, t, link);
+    struct ashwc_toplevel *t = wl_container_of(workspace->floating_toplevels.next, t, link);
     focus_toplevel(t);
   } else {
     unfocus_focused_toplevel();
@@ -135,13 +135,13 @@ change_workspace(struct mwc_workspace *workspace, bool keep_focus) {
 }
 
 void
-toplevel_move_to_workspace(struct mwc_toplevel *toplevel,
-                           struct mwc_workspace *workspace) {
+toplevel_move_to_workspace(struct ashwc_toplevel *toplevel,
+                           struct ashwc_workspace *workspace) {
   assert(toplevel != NULL && workspace != NULL);
   if(toplevel == server.grabbed_toplevel || toplevel->workspace == workspace
      || workspace->fullscreen_toplevel != NULL) return;
 
-  struct mwc_workspace *old_workspace = toplevel->workspace;
+  struct ashwc_workspace *old_workspace = toplevel->workspace;
 
   /* handle server state; note: even tho fullscreen toplevel is handled differently
    * we will still update its underlying type */
@@ -152,7 +152,7 @@ toplevel_move_to_workspace(struct mwc_toplevel *toplevel,
   } else if(toplevel_is_master(toplevel)){
     wl_list_remove(&toplevel->link);
     if(!wl_list_empty(&old_workspace->slaves)) {
-      struct mwc_toplevel *s = wl_container_of(old_workspace->slaves.next, s, link);
+      struct ashwc_toplevel *s = wl_container_of(old_workspace->slaves.next, s, link);
       wl_list_remove(&s->link);
       wl_list_insert(old_workspace->masters.prev, &s->link);
     }
@@ -241,18 +241,18 @@ toplevel_move_to_workspace(struct mwc_toplevel *toplevel,
   change_workspace(workspace, true);
 }
 
-struct mwc_toplevel *
-workspace_find_closest_floating_toplevel(struct mwc_workspace *workspace,
-                                         enum mwc_direction side) {
+struct ashwc_toplevel *
+workspace_find_closest_floating_toplevel(struct ashwc_workspace *workspace,
+                                         enum ashwc_direction side) {
   struct wl_list *l = workspace->floating_toplevels.next;
   if(l == &workspace->floating_toplevels) return NULL;
 
-  struct mwc_toplevel *t = wl_container_of(l, t, link);
+  struct ashwc_toplevel *t = wl_container_of(l, t, link);
 
-  struct mwc_toplevel *min_x = t;
-  struct mwc_toplevel *max_x = t;
-  struct mwc_toplevel *min_y = t;
-  struct mwc_toplevel *max_y = t;
+  struct ashwc_toplevel *min_x = t;
+  struct ashwc_toplevel *max_x = t;
+  struct ashwc_toplevel *min_y = t;
+  struct ashwc_toplevel *max_y = t;
 
   wl_list_for_each(t, &workspace->floating_toplevels, link) {
     if(X(t) < X(min_x)) {
@@ -268,10 +268,10 @@ workspace_find_closest_floating_toplevel(struct mwc_workspace *workspace,
   }
 
   switch(side) {
-    case MWC_UP: return min_y;
-    case MWC_DOWN: return max_y;
-    case MWC_LEFT: return min_x;
-    case MWC_RIGHT: return max_x;
+    case ASHWC_UP: return min_y;
+    case ASHWC_DOWN: return max_y;
+    case ASHWC_LEFT: return min_x;
+    case ASHWC_RIGHT: return max_x;
   }
 }
 

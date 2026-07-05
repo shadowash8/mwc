@@ -1,5 +1,5 @@
 project(
-  'mwc',
+  'ashwc',
   'c',
   version: '0.1.0',
   license: 'MIT',
@@ -47,7 +47,7 @@ src = [
   'src/keyboard.c',
   'src/layer_surface.c',
   'src/layout.c',
-  'src/mwc.c',
+  'src/ashwc.c',
   'src/output.c',
   'src/pointer.c',
   'src/popup.c',
@@ -72,7 +72,7 @@ deps = [
   dependency('libinput'),
 ]
 
-executable('mwc',
+executable('ashwc',
   src,
   generated,
   dependencies: deps,
@@ -81,14 +81,14 @@ executable('mwc',
   install: true
 )
 
-executable('mwc-ipc',
-  'mwc-ipc/mwc-ipc.c',
+executable('ashwc-ipc',
+  'ashwc-ipc/ashwc-ipc.c',
   include_directories: include_directories('util'),
   install: true
 )
 
-install_data('default.conf', install_dir: get_option('datadir') / 'mwc')
-install_data('LICENSE', install_dir: get_option('datadir') / 'licenses/mwc')
-install_data('mwc.desktop', install_dir: get_option('datadir') / 'wayland-sessions')
-install_data('mwc-portals.conf', install_dir: get_option('datadir') / 'xdg-desktop-portal')
+install_data('default.conf', install_dir: get_option('datadir') / 'ashwc')
+install_data('LICENSE', install_dir: get_option('datadir') / 'licenses/ashwc')
+install_data('ashwc.desktop', install_dir: get_option('datadir') / 'wayland-sessions')
+install_data('ashwc-portals.conf', install_dir: get_option('datadir') / 'xdg-desktop-portal')
 

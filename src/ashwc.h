@@ -19,14 +19,14 @@
 
 #define STRING_INITIAL_LENGTH 64
 
-enum mwc_direction {
-  MWC_UP,
-  MWC_RIGHT,
-  MWC_DOWN,
-  MWC_LEFT,
+enum ashwc_direction {
+  ASHWC_UP,
+  ASHWC_RIGHT,
+  ASHWC_DOWN,
+  ASHWC_LEFT,
 };
 
-struct mwc_server {
+struct ashwc_server {
 	struct wl_display *wl_display;
 	struct wl_event_loop *wl_event_loop;
   struct wlr_session *session;
@@ -78,12 +78,12 @@ struct mwc_server {
   struct wl_listener request_destroy_drag;
 
 	struct wl_list keyboards;
-  struct mwc_keyboard *last_used_keyboard;
+  struct ashwc_keyboard *last_used_keyboard;
 
-	enum mwc_cursor_mode cursor_mode;
+	enum ashwc_cursor_mode cursor_mode;
   /* this keeps state when the compositor is in the state of moving or
    * resizing toplevels */
-	struct mwc_toplevel *grabbed_toplevel;
+	struct ashwc_toplevel *grabbed_toplevel;
 	double grab_x, grab_y;
 	struct wlr_box grabbed_toplevel_initial_box;
 	uint32_t resize_edges;
@@ -97,14 +97,14 @@ struct mwc_server {
   } client_cursor;
 
   /* active workspace follows mouse */
-  struct mwc_workspace *active_workspace;
+  struct ashwc_workspace *active_workspace;
   /* toplevel with keyboard focus */
-  struct mwc_toplevel *focused_toplevel;
+  struct ashwc_toplevel *focused_toplevel;
   /* keeps track if there is a layer surface that takes keyboard focus */
-  struct mwc_layer_surface *focused_layer_surface;
+  struct ashwc_layer_surface *focused_layer_surface;
   bool exclusive;
   /* last focused toplevel before layer surface was given focus */
-  struct mwc_toplevel *prev_focused;
+  struct ashwc_toplevel *prev_focused;
 
 	struct wlr_output_layout *output_layout;
 	struct wl_list outputs;
@@ -123,11 +123,11 @@ struct mwc_server {
   struct wlr_session_lock_manager_v1 *session_lock_manager;
   struct wl_listener new_lock;
   struct wl_listener lock_manager_destroy;
-  struct mwc_lock *lock;
+  struct ashwc_lock *lock;
 
   struct wlr_pointer_constraints_v1 *pointer_contrains_manager;
   struct wl_listener new_contraint;
-  struct mwc_pointer_constraint *current_constraint;
+  struct ashwc_pointer_constraint *current_constraint;
 
   struct wlr_relative_pointer_manager_v1 *relative_pointer_manager;
   struct wl_listener relative_pointer_manager_destroy;
@@ -136,7 +136,7 @@ struct mwc_server {
   struct wl_listener xdg_activation_request;
   struct wl_listener xdg_activation_new_token;
 
-  struct mwc_config *config;
+  struct ashwc_config *config;
 
   int *ipc_clients;
   bool ipc_running;

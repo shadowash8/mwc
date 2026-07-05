@@ -6,7 +6,7 @@
 #include <wlr/types/wlr_pointer_constraints_v1.h>
 #include <wlr/types/wlr_relative_pointer_v1.h>
 
-struct mwc_pointer {
+struct ashwc_pointer {
   struct wlr_pointer *wlr_pointer;
   const char *name;
   struct wl_list link;
@@ -14,16 +14,16 @@ struct mwc_pointer {
   struct wl_listener destroy;
 };
 
-struct mwc_pointer_constraint {
+struct ashwc_pointer_constraint {
   struct wlr_pointer_constraint_v1 *wlr_pointer_constraint;
 
   struct wl_listener destroy;
 };
 
-enum mwc_cursor_mode {
-	MWC_CURSOR_PASSTHROUGH,
-	MWC_CURSOR_MOVE,
-	MWC_CURSOR_RESIZE,
+enum ashwc_cursor_mode {
+	ASHWC_CURSOR_PASSTHROUGH,
+	ASHWC_CURSOR_MOVE,
+	ASHWC_CURSOR_RESIZE,
 };
 
 void
@@ -33,7 +33,7 @@ void
 pointer_handle_destroy(struct wl_listener *listener, void *data);
 
 bool
-pointer_configure(struct mwc_pointer *pointer);
+pointer_configure(struct ashwc_pointer *pointer);
 
 void
 server_reset_cursor_mode(void);
@@ -72,10 +72,10 @@ void
 constraint_remove_current(void);
 
 void
-constraint_set_as_current(struct mwc_pointer_constraint *constraint);
+constraint_set_as_current(struct ashwc_pointer_constraint *constraint);
 
 void
-constraint_move_to_hint(struct mwc_pointer_constraint *constraint);
+constraint_move_to_hint(struct ashwc_pointer_constraint *constraint);
 
 void
 server_handle_new_relative_pointer(struct wl_listener *listener, void *data);

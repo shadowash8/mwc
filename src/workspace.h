@@ -8,30 +8,30 @@
 
 #include <wayland-server-protocol.h>
 
-struct mwc_animation;
+struct ashwc_animation;
 
-struct mwc_workspace {
+struct ashwc_workspace {
   struct wl_list link;
 
-  struct mwc_output *output;
+  struct ashwc_output *output;
   uint32_t index;
   struct workspace_config *config;
 
   struct wl_list masters;
   struct wl_list slaves;
   struct wl_list floating_toplevels;
-  struct mwc_toplevel *fullscreen_toplevel;
+  struct ashwc_toplevel *fullscreen_toplevel;
 };
 
 void
-workspace_create_for_output(struct mwc_output *output, struct workspace_config *config);
+workspace_create_for_output(struct ashwc_output *output, struct workspace_config *config);
 
 void
-change_workspace(struct mwc_workspace *workspace, bool keep_focus);
+change_workspace(struct ashwc_workspace *workspace, bool keep_focus);
 
 void
-toplevel_move_to_workspace(struct mwc_toplevel *toplevel, struct mwc_workspace *workspace);
+toplevel_move_to_workspace(struct ashwc_toplevel *toplevel, struct ashwc_workspace *workspace);
 
-struct mwc_toplevel *
-workspace_find_closest_floating_toplevel(struct mwc_workspace *workspace,
-                                      enum mwc_direction side);
+struct ashwc_toplevel *
+workspace_find_closest_floating_toplevel(struct ashwc_workspace *workspace,
+                                      enum ashwc_direction side);

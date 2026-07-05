@@ -5,9 +5,9 @@
 #include <wlr/types/wlr_output.h>
 
 #include "workspace.h"
-#include "mwc.h"
+#include "ashwc.h"
 
-struct mwc_output {
+struct ashwc_output {
 	struct wl_list link;
 	struct wlr_output *wlr_output;
   struct wlr_scene_output *scene_output;
@@ -23,7 +23,7 @@ struct mwc_output {
 
   struct wlr_scene_optimized_blur *blur;
 
-  struct mwc_workspace *active_workspace;
+  struct ashwc_workspace *active_workspace;
 
   struct wlr_scene_rect *session_lock_rect;
 
@@ -36,32 +36,32 @@ void
 server_handle_new_output(struct wl_listener *listener, void *data);
 
 struct wlr_box
-output_add_to_layout(struct mwc_output *output, struct output_config *config);
+output_add_to_layout(struct ashwc_output *output, struct output_config *config);
 
 bool
 output_initialize(struct wlr_output *output, struct output_config *config);
 
 bool
-output_transfer_existing_workspaces(struct mwc_output *output);
+output_transfer_existing_workspaces(struct ashwc_output *output);
 
-struct mwc_workspace *
-output_find_owned_workspace(struct mwc_output *output);
+struct ashwc_workspace *
+output_find_owned_workspace(struct ashwc_output *output);
 
 bool
 output_apply_preffered_mode(struct wlr_output *wlr_output, struct wlr_output_state *state);
 
 double
-output_frame_duration_ms(struct mwc_output *output);
+output_frame_duration_ms(struct ashwc_output *output);
 
-struct mwc_output *
-output_get_relative(struct mwc_output *output, enum mwc_direction direction);
-
-void
-cursor_jump_output(struct mwc_output *output);
+struct ashwc_output *
+output_get_relative(struct ashwc_output *output, enum ashwc_direction direction);
 
 void
-focus_output(struct mwc_output *output,
-             enum mwc_direction side);
+cursor_jump_output(struct ashwc_output *output);
+
+void
+focus_output(struct ashwc_output *output,
+             enum ashwc_direction side);
 
 void
 output_handle_frame(struct wl_listener *listener, void *data);
@@ -73,6 +73,6 @@ void
 output_handle_destroy(struct wl_listener *listener, void *data);
 
 void
-output_move_workspaces(struct mwc_output *dest, struct mwc_output *src);
+output_move_workspaces(struct ashwc_output *dest, struct ashwc_output *src);
 
 void output_destroy(void);

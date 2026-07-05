@@ -6,7 +6,7 @@
 #include "keybinds.h"
 #include "keyboard.h"
 #include "layer_surface.h"
-#include "mwc.h"
+#include "ashwc.h"
 #include "output.h"
 #include "pointer.h"
 #include "workspace.h"
@@ -68,7 +68,7 @@ parse_color_rgba_or_hex(char **args, size_t arg_count, float *dest) {
 }
 
 struct vec2
-calculate_animation_curve_at(struct mwc_config *c, double t) {
+calculate_animation_curve_at(struct ashwc_config *c, double t) {
   struct vec2 point;
 
   point.x = 3 * t * (1 - t) * (1 - t) * c->animation_curve[0]
@@ -83,7 +83,7 @@ calculate_animation_curve_at(struct mwc_config *c, double t) {
 }
 
 /* thanks vaxry */
-void bake_bezier_curve_points(struct mwc_config *c) {
+void bake_bezier_curve_points(struct ashwc_config *c) {
   c->baked_points = calloc(BAKED_POINTS_COUNT, sizeof(*c->baked_points));
 
   for(size_t i = 0; i < BAKED_POINTS_COUNT; i++) {
@@ -92,7 +92,7 @@ void bake_bezier_curve_points(struct mwc_config *c) {
 }
 
 bool
-config_add_layer_rule(struct mwc_config *c, char *regex, char *predicate,
+config_add_layer_rule(struct ashwc_config *c, char *regex, char *predicate,
                       char **args, size_t arg_count) {
     struct layer_rule_regex condition;
     if(strcmp(regex, "_") == 0) {
@@ -124,7 +124,7 @@ config_add_layer_rule(struct mwc_config *c, char *regex, char *predicate,
 }
 
 bool
-config_add_window_rule(struct mwc_config *c, char *app_id_regex, char *title_regex,
+config_add_window_rule(struct ashwc_config *c, char *app_id_regex, char *title_regex,
                        char *predicate, char **args, size_t arg_count) {
   struct window_rule_regex condition;
   if(strcmp(app_id_regex, "_") == 0) {
@@ -241,7 +241,7 @@ string_append_with_comma(char *a, char *b, size_t *cap, bool comma) {
 }
 
 void
-config_add_keymap(struct mwc_config *c, char *layout, char *variant) {
+config_add_keymap(struct ashwc_config *c, char *layout, char *variant) {
   /* everything here is ugly */
   static size_t layout_cap, variant_cap;
   static size_t count;
@@ -261,7 +261,7 @@ config_add_keymap(struct mwc_config *c, char *layout, char *variant) {
 }
 
 bool
-config_add_keybind(struct mwc_config *c, char *modifiers, char *key,
+config_add_keybind(struct ashwc_config *c, char *modifiers, char *key,
                    char* action, char **args, size_t arg_count) {
   char *p = modifiers;
   uint32_t modifiers_flag = 0;
@@ -383,15 +383,15 @@ config_add_keybind(struct mwc_config *c, char *modifiers, char *key,
       return false;
     }
 
-    enum mwc_direction direction;
+    enum ashwc_direction direction;
     if(strcmp(args[0], "up") == 0) {
-      direction = MWC_UP;
+      direction = ASHWC_UP;
     } else if(strcmp(args[0], "left") == 0) {
-      direction = MWC_LEFT;
+      direction = ASHWC_LEFT;
     } else if(strcmp(args[0], "down") == 0) {
-      direction = MWC_DOWN;
+      direction = ASHWC_DOWN;
     } else if(strcmp(args[0], "right") == 0) {
-      direction = MWC_RIGHT;
+      direction = ASHWC_RIGHT;
     } else {
       wlr_log(WLR_ERROR, "invalid args to %s", action);
       free(k);
@@ -407,15 +407,15 @@ config_add_keybind(struct mwc_config *c, char *modifiers, char *key,
       return false;
     }
 
-    enum mwc_direction direction;
+    enum ashwc_direction direction;
     if(strcmp(args[0], "up") == 0) {
-      direction = MWC_UP;
+      direction = ASHWC_UP;
     } else if(strcmp(args[0], "left") == 0) {
-      direction = MWC_LEFT;
+      direction = ASHWC_LEFT;
     } else if(strcmp(args[0], "down") == 0) {
-      direction = MWC_DOWN;
+      direction = ASHWC_DOWN;
     } else if(strcmp(args[0], "right") == 0) {
-      direction = MWC_RIGHT;
+      direction = ASHWC_RIGHT;
     } else {
       wlr_log(WLR_ERROR, "invalid args to %s", action);
       free(k);
@@ -476,7 +476,7 @@ config_free_args(char **args, size_t arg_count) {
 }
 
 bool
-config_handle_value(struct mwc_config *c, char *keyword, char **args, size_t arg_count) {
+config_handle_value(struct ashwc_config *c, char *keyword, char **args, size_t arg_count) {
   if(strcmp(keyword, "min_toplevel_size") == 0) {
     if(arg_count < 1) goto invalid;
 
@@ -780,13 +780,13 @@ depricated:
 
 void
 get_default_config_path(char *dest, size_t size) {
-  char *default_config_path = getenv("MWC_DEFAULT_CONFIG_PATH");
+  char *default_config_path = getenv("ASHWC_DEFAULT_CONFIG_PATH");
 
   if(default_config_path == NULL) {
-    default_config_path = "/usr/share/mwc/default.conf";
-    wlr_log(WLR_INFO, "no env MWC_DEFAULT_CONFIG_PATH set, using the default %s", default_config_path);
+    default_config_path = "/usr/share/ashwc/default.conf";
+    wlr_log(WLR_INFO, "no env ASHWC_DEFAULT_CONFIG_PATH set, using the default %s", default_config_path);
   } else {
-    wlr_log(WLR_INFO, "env MWC_DEFAULT_CONFIG_PATH set to %s, using it", default_config_path);
+    wlr_log(WLR_INFO, "env ASHWC_DEFAULT_CONFIG_PATH set to %s, using it", default_config_path);
   }
 
   strncpy(dest, default_config_path, size);
@@ -794,7 +794,7 @@ get_default_config_path(char *dest, size_t size) {
 
 bool
 get_config_path(char *dest, size_t size) {
-  char *env_conf = getenv("MWC_CONFIG_PATH");
+  char *env_conf = getenv("ASHWC_CONFIG_PATH");
   if(env_conf != NULL) {
     strncpy(dest, env_conf, size);
     dest[size - 1] = 0;
@@ -803,13 +803,13 @@ get_config_path(char *dest, size_t size) {
 
   char *config_home = getenv("XDG_CONFIG_HOME");
   if(config_home != NULL) {
-    snprintf(dest, size, "%s/mwc/mwc.conf", config_home);
+    snprintf(dest, size, "%s/ashwc/ashwc.conf", config_home);
     return true;
   }
 
   char *home = getenv("HOME");
   if(home != NULL) {
-    snprintf(dest, size, "%s/.config/mwc/mwc.conf", home);
+    snprintf(dest, size, "%s/.config/ashwc/ashwc.conf", home);
     return true;
   }
 
@@ -920,9 +920,9 @@ config_handle_line(char *line, size_t line_number, char **keyword,
 }
 
 void
-config_set_default_needed_params(struct mwc_config *c) {
+config_set_default_needed_params(struct ashwc_config *c) {
   /* as we are initializing config with calloc, some fields that are necessary in order
-   * for mwc to not crash may be not specified in the config.
+   * for ashwc to not crash may be not specified in the config.
    * we set their values to some default value.*/
   if(c->keyboard_rate == 0) {
     c->keyboard_rate = 150;
@@ -981,11 +981,11 @@ config_set_default_needed_params(struct mwc_config *c) {
   }
 }
 
-extern struct mwc_server server;
+extern struct ashwc_server server;
 
-struct mwc_config *
+struct ashwc_config *
 config_load() {
-  struct mwc_config *c = calloc(1, sizeof(*c));
+  struct ashwc_config *c = calloc(1, sizeof(*c));
 
   FILE *config_file;
   char path[1024];
@@ -1053,7 +1053,7 @@ config_load() {
 /* workspaces are the only thing that are never freed, as we do not allow
  * destroying them for the lifetime of the compositor */
 void
-config_destroy(struct mwc_config *c) {
+config_destroy(struct ashwc_config *c) {
   free(c->dir);
 
   struct output_config *o, *o_temp;
@@ -1135,7 +1135,7 @@ config_destroy(struct mwc_config *c) {
 }
 
 void 
-toplevel_reapply_effects_etc(struct mwc_toplevel *toplevel) {
+toplevel_reapply_effects_etc(struct ashwc_toplevel *toplevel) {
   toplevel_recheck_opacity_rules(toplevel);
 
   if(toplevel->shadow != NULL) {
@@ -1150,7 +1150,7 @@ toplevel_reapply_effects_etc(struct mwc_toplevel *toplevel) {
 }
 
 void
-layout_reorganize(struct mwc_workspace *workspace) {
+layout_reorganize(struct ashwc_workspace *workspace) {
   uint32_t master_count = wl_list_length(&workspace->masters);
   
   if(master_count > server.config->master_count) {
@@ -1178,7 +1178,7 @@ layout_reorganize(struct mwc_workspace *workspace) {
 
 void
 config_reload() {
-  struct mwc_config *c = config_load();
+  struct ashwc_config *c = config_load();
   if(c == NULL) {
     wlr_log(WLR_ERROR, "could not reload the config, keeping the old one");
     return;
@@ -1212,12 +1212,12 @@ config_reload() {
 
   c->workspaces = server.config->workspaces;
 
-  struct mwc_config *old_config = server.config;
+  struct ashwc_config *old_config = server.config;
   server.config = c;
 
   struct output_config *o;
   wl_list_for_each(o, &c->outputs, link) {
-    struct mwc_output *out;
+    struct ashwc_output *out;
     wl_list_for_each(out, &server.outputs, link) {
       if(strcmp(o->name, out->wlr_output->name) == 0) {
         struct wlr_box output_box;
@@ -1240,7 +1240,7 @@ config_reload() {
   }
 
   if(c->blur) {
-    struct mwc_output *output;
+    struct ashwc_output *output;
     wl_list_for_each(output, &server.outputs, link) {
       if(output->blur != NULL) {
         wlr_scene_node_destroy(&output->blur->node);
@@ -1263,26 +1263,26 @@ config_reload() {
       wlr_scene_node_set_position(&output->blur->node, output_box.x, output_box.y);
     }
   } else if(old_config->blur) {
-    struct mwc_output *output;
+    struct ashwc_output *output;
     wl_list_for_each(output, &server.outputs, link) {
       wlr_scene_node_destroy(&output->blur->node);
       output->blur = NULL;
     }
   }
 
-  struct mwc_keyboard *keyboard;
+  struct ashwc_keyboard *keyboard;
   wl_list_for_each(keyboard, &server.keyboards, link) {
     keyboard_configure(keyboard);
   }
 
-  struct mwc_pointer *pointer; 
+  struct ashwc_pointer *pointer; 
   wl_list_for_each(pointer, &server.pointers, link) {
     pointer_configure(pointer);
   }
 
-  struct mwc_output *out;
+  struct ashwc_output *out;
   wl_list_for_each(out, &server.outputs, link) {
-    struct mwc_workspace *w;
+    struct ashwc_workspace *w;
     wl_list_for_each(w, &out->workspaces, link) {
 
       /* we rewire the keybinds */
@@ -1302,7 +1302,7 @@ config_reload() {
         layout_reorganize(w);
       }
 
-      struct mwc_toplevel *t;
+      struct ashwc_toplevel *t;
       wl_list_for_each(t, &w->floating_toplevels, link) {
         toplevel_reapply_effects_etc(t);
       }
@@ -1316,7 +1316,7 @@ config_reload() {
       layout_set_pending_state(w);
     }
 
-    struct mwc_layer_surface *layer;
+    struct ashwc_layer_surface *layer;
     for(size_t i = 0; i < 4; i++) {
       wl_list_for_each(layer, &(&out->layers.background)[i], link) {
         struct layer_rule_blur *b;

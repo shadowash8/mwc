@@ -4,7 +4,7 @@
 #include "keybinds.h"
 #include "ipc.h"
 #include "layout.h"
-#include "mwc.h"
+#include "ashwc.h"
 #include "toplevel.h"
 #include "output.h"
 #include "something.h"
@@ -22,11 +22,11 @@
 #include <wlr/util/log.h>
 #include <wlr/util/region.h>
 
-extern struct mwc_server server;
+extern struct ashwc_server server;
 
 void
 server_handle_new_pointer(struct wlr_input_device *device) {
-  struct mwc_pointer *pointer = calloc(1, sizeof(*pointer));
+  struct ashwc_pointer *pointer = calloc(1, sizeof(*pointer));
   pointer->wlr_pointer = wlr_pointer_from_input_device(device);
   pointer->wlr_pointer->data = pointer;
 
@@ -44,7 +44,7 @@ server_handle_new_pointer(struct wlr_input_device *device) {
 
 void
 pointer_handle_destroy(struct wl_listener *listener, void *data) {
-  struct mwc_pointer *pointer = wl_container_of(listener, pointer, destroy);
+  struct ashwc_pointer *pointer = wl_container_of(listener, pointer, destroy);
 
   wl_list_remove(&pointer->destroy.link);
   wl_list_remove(&pointer->link);
@@ -71,7 +71,7 @@ pointer_destroy(void) {
 }
 
 bool
-pointer_configure(struct mwc_pointer *pointer) {
+pointer_configure(struct ashwc_pointer *pointer) {
   if(!wlr_input_device_is_libinput(&pointer->wlr_pointer->base)) return false;
 
   struct libinput_device *device = wlr_libinput_get_device_handle(&pointer->wlr_pointer->base);
@@ -146,7 +146,7 @@ pointer_configure(struct mwc_pointer *pointer) {
 void
 server_reset_cursor_mode() {
   /* reset the cursor mode to passthrough. */
-  server.cursor_mode = MWC_CURSOR_PASSTHROUGH;
+  server.cursor_mode = ASHWC_CURSOR_PASSTHROUGH;
   server.grabbed_toplevel->resizing = false;
   server.grabbed_toplevel = NULL;
   server.client_driven_move_resize = false;
@@ -164,14 +164,14 @@ cursor_handle_motion(uint32_t time) {
   /* get the output that the cursor is on currently */
   struct wlr_output *wlr_output = wlr_output_layout_output_at(server.output_layout,
                                                               server.cursor->x, server.cursor->y);
-  struct mwc_output *output = wlr_output->data;
+  struct ashwc_output *output = wlr_output->data;
 
   /* set global active workspace and stop moving resizing if there is a fullscreened toplevel */
   if(output->active_workspace != server.active_workspace) {
-    struct mwc_workspace *prev_workspace = server.active_workspace;
+    struct ashwc_workspace *prev_workspace = server.active_workspace;
 
     if(output->active_workspace->fullscreen_toplevel != NULL) {
-      if(server.cursor_mode == MWC_CURSOR_MOVE) {
+      if(server.cursor_mode == ASHWC_CURSOR_MOVE) {
         if(!server.grabbed_toplevel->floating) {
           toplevel_tiled_insert_into_layout(server.grabbed_toplevel,
                                             server.cursor->x, server.cursor->y);
@@ -182,7 +182,7 @@ cursor_handle_motion(uint32_t time) {
 
         server_reset_cursor_mode();
         layout_set_pending_state(prev_workspace);
-      } else if(server.cursor_mode == MWC_CURSOR_RESIZE) {
+      } else if(server.cursor_mode == ASHWC_CURSOR_RESIZE) {
         server_reset_cursor_mode();
       }
     }
@@ -191,10 +191,10 @@ cursor_handle_motion(uint32_t time) {
     ipc_broadcast_message(IPC_ACTIVE_WORKSPACE);
   }
 
-  if(server.cursor_mode == MWC_CURSOR_MOVE) {
+  if(server.cursor_mode == ASHWC_CURSOR_MOVE) {
     toplevel_move();
     return;
-  } else if (server.cursor_mode == MWC_CURSOR_RESIZE) {
+  } else if (server.cursor_mode == ASHWC_CURSOR_RESIZE) {
     toplevel_resize();
     return;
   }
@@ -212,7 +212,7 @@ pointer_handle_focus(uint32_t time, bool handle_keyboard_focus) {
   double sx, sy;
   struct wlr_seat *seat = server.seat;
   struct wlr_surface *surface = NULL;
-  struct mwc_something *something = something_at(server.cursor->x, server.cursor->y,
+  struct ashwc_something *something = something_at(server.cursor->x, server.cursor->y,
                                                  &surface, &sx, &sy);
 
   if(something == NULL) {
@@ -224,11 +224,11 @@ pointer_handle_focus(uint32_t time, bool handle_keyboard_focus) {
   }
 
   if(handle_keyboard_focus) {
-    if(something->type == MWC_TOPLEVEL) {
+    if(something->type == ASHWC_TOPLEVEL) {
       focus_toplevel(something->toplevel);
-    } else if(something->type == MWC_LAYER_SURFACE){
+    } else if(something->type == ASHWC_LAYER_SURFACE){
       focus_layer_surface(something->layer_surface);
-    } else if(something->type == MWC_LOCK_SURFACE) {
+    } else if(something->type == ASHWC_LOCK_SURFACE) {
       focus_lock_surface(something->lock_surface);
     }
   }
@@ -314,9 +314,9 @@ server_handle_cursor_button(struct wl_listener *listener, void *data) {
                                  event->button, event->state);
 
   if(event->state == WL_POINTER_BUTTON_STATE_RELEASED
-     && server.cursor_mode != MWC_CURSOR_PASSTHROUGH
+     && server.cursor_mode != ASHWC_CURSOR_PASSTHROUGH
      && server.client_driven_move_resize) {
-    struct mwc_output *primary_output = 
+    struct ashwc_output *primary_output = 
       toplevel_get_primary_output(server.grabbed_toplevel);
 
     if(primary_output != server.grabbed_toplevel->workspace->output) {
@@ -364,7 +364,7 @@ server_handle_new_constraint(struct wl_listener *listener, void *data) {
     if(con != wlr_constraint && con->surface == wlr_constraint->surface) return;
   }
 
-  struct mwc_pointer_constraint *constraint = calloc(1, sizeof(*constraint));
+  struct ashwc_pointer_constraint *constraint = calloc(1, sizeof(*constraint));
   constraint->wlr_pointer_constraint = wlr_constraint;
   constraint->wlr_pointer_constraint->data = constraint;
   
@@ -383,7 +383,7 @@ constraint_remove_current(void) {
 }
 
 void
-constraint_set_as_current(struct mwc_pointer_constraint *constraint) {
+constraint_set_as_current(struct ashwc_pointer_constraint *constraint) {
   if(server.current_constraint == constraint) return;
 
   if(server.current_constraint != NULL) {
@@ -396,7 +396,7 @@ constraint_set_as_current(struct mwc_pointer_constraint *constraint) {
 }
 
 void
-constraint_move_to_hint(struct mwc_pointer_constraint *constraint) {
+constraint_move_to_hint(struct ashwc_pointer_constraint *constraint) {
   struct wlr_pointer_constraint_v1 *wlr_constraint = constraint->wlr_pointer_constraint;
 
   if(wlr_constraint->current.committed & WLR_POINTER_CONSTRAINT_V1_STATE_CURSOR_HINT) {
@@ -413,7 +413,7 @@ constraint_move_to_hint(struct mwc_pointer_constraint *constraint) {
 
 void
 constraint_handle_destroy(struct wl_listener *listener, void *data) {
-	struct mwc_pointer_constraint *constraint = wl_container_of(listener, constraint, destroy);
+	struct ashwc_pointer_constraint *constraint = wl_container_of(listener, constraint, destroy);
 
 	wl_list_remove(&constraint->destroy.link);
 	if(server.current_constraint == constraint) {

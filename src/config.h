@@ -85,7 +85,7 @@ struct pointer_config {
   bool specified;                     \
 }                                     \
 
-struct mwc_config {
+struct ashwc_config {
   char *dir; // NULL if default
 
   struct wl_list outputs;
@@ -166,41 +166,41 @@ struct mwc_config {
 };
 
 struct vec2
-calculate_animation_curve_at(struct mwc_config *c, double t);
+calculate_animation_curve_at(struct ashwc_config *c, double t);
 
 void
-bake_bezier_curve_points(struct mwc_config *c);
+bake_bezier_curve_points(struct ashwc_config *c);
 
 bool
-config_add_window_rule(struct mwc_config *c, char *app_id_regex, char *title_regex,
+config_add_window_rule(struct ashwc_config *c, char *app_id_regex, char *title_regex,
                        char *predicate, char **args, size_t arg_count);
 
 bool
-config_add_keybind(struct mwc_config *c, char *modifiers, char *key,
+config_add_keybind(struct ashwc_config *c, char *modifiers, char *key,
                    char* action, char **args, size_t arg_count);
 
 void
 config_free_args(char **args, size_t arg_count);
 
 bool
-config_handle_value(struct mwc_config *c, char *keyword, char **args, size_t arg_count);
+config_handle_value(struct ashwc_config *c, char *keyword, char **args, size_t arg_count);
 
 /* assumes the line is newline teriminated, as it should be with fgets() */
 bool
 config_handle_line(char *line, size_t line_number, char **keyword,
                    char ***args, size_t *args_count);
 
-struct mwc_config *
+struct ashwc_config *
 config_load();
 
 void
-config_set_default_needed_params(struct mwc_config *c);
+config_set_default_needed_params(struct ashwc_config *c);
 
 void
 config_reload();
 
 void
-config_destroy(struct mwc_config *c);
+config_destroy(struct ashwc_config *c);
 
 void *
 config_watch(void *data);
