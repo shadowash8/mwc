@@ -4,8 +4,8 @@
 #include "ashwc.h"
 #include "config.h"
 #include "ipc.h"
-#include "layout.h"
 #include "layer_surface.h"
+#include "layout.h"
 #include "pointer.h"
 #include "rendering.h"
 #include "toplevel.h"
@@ -148,8 +148,9 @@ void server_handle_new_output(struct wl_listener *listener, void *data) {
   }
 }
 
-static bool output_manager_apply_config(struct wlr_output_configuration_v1 *config,
-                                        bool test_only) {
+static bool
+output_manager_apply_config(struct wlr_output_configuration_v1 *config,
+                            bool test_only) {
   struct wlr_output_configuration_head_v1 *head;
   bool ok = true;
 
@@ -221,7 +222,8 @@ void output_manager_handle_apply(struct wl_listener *listener, void *data) {
 }
 
 void output_update_manager_config(void) {
-  struct wlr_output_configuration_v1 *config = wlr_output_configuration_v1_create();
+  struct wlr_output_configuration_v1 *config =
+      wlr_output_configuration_v1_create();
 
   struct ashwc_output *output;
   wl_list_for_each(output, &server.outputs, link) {
@@ -319,6 +321,7 @@ bool output_initialize(struct wlr_output *wlr_output,
 
   if (config != NULL) {
     wlr_output_state_set_scale(&state, config->scale);
+    wlr_output_state_set_transform(&state, config->transform);
     /* we try to find the closest supported mode for this output, that means:
      *  - same resolution
      *  - closest refresh rate
@@ -545,9 +548,9 @@ void output_handle_commit(struct wl_listener *listener, void *data) {
   struct ashwc_output *output = wl_container_of(listener, output, commit);
   struct wlr_output_event_commit *event = data;
 
-  if (event->state->committed & (WLR_OUTPUT_STATE_MODE |
-                                  WLR_OUTPUT_STATE_SCALE |
-                                  WLR_OUTPUT_STATE_TRANSFORM)) {
+  if (event->state->committed &
+      (WLR_OUTPUT_STATE_MODE | WLR_OUTPUT_STATE_SCALE |
+       WLR_OUTPUT_STATE_TRANSFORM)) {
     output_reconfigure(output);
   }
 }

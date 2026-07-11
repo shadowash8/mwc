@@ -255,6 +255,25 @@ void config_add_keymap(struct ashwc_config *c, char *layout, char *variant) {
   count++;
 }
 
+enum wl_output_transform parse_transform(const char *s) {
+  if (strcmp(s, "90") == 0)
+    return WL_OUTPUT_TRANSFORM_90;
+  if (strcmp(s, "180") == 0)
+    return WL_OUTPUT_TRANSFORM_180;
+  if (strcmp(s, "270") == 0)
+    return WL_OUTPUT_TRANSFORM_270;
+  if (strcmp(s, "flipped") == 0)
+    return WL_OUTPUT_TRANSFORM_FLIPPED;
+  if (strcmp(s, "flipped-90") == 0)
+    return WL_OUTPUT_TRANSFORM_FLIPPED_90;
+  if (strcmp(s, "flipped-180") == 0)
+    return WL_OUTPUT_TRANSFORM_FLIPPED_180;
+  if (strcmp(s, "flipped-270") == 0)
+    return WL_OUTPUT_TRANSFORM_FLIPPED_270;
+  return WL_OUTPUT_TRANSFORM_NORMAL; // covers "normal" and anything
+                                     // unrecognized
+}
+
 bool config_add_keybind(struct ashwc_config *c, char *modifiers, char *key,
                         char *action, char **args, size_t arg_count) {
   char *p = modifiers;
@@ -633,6 +652,9 @@ bool config_handle_value(struct ashwc_config *c, char *keyword, char **args,
         .refresh_rate = atoi(args[5]) * 1000,
         /* scale is optional, defaults to 1 */
         .scale = arg_count > 6 ? atof(args[6]) : 1,
+        /* transform is optional, defaults to normal */
+        .transform = arg_count > 7 ? parse_transform(args[7])
+                                   : WL_OUTPUT_TRANSFORM_NORMAL,
     };
 
     wl_list_insert(&c->outputs, &m->link);
@@ -1335,9 +1357,9 @@ void config_reload() {
                                   &output_box);
 
         if (o->width != output_box.width || o->height != output_box.height ||
-            abs((int32_t)o->refresh_rate - (int32_t)out->wlr_output->refresh) >
-                1000 ||
-            o->scale != out->wlr_output->scale) {
+            abs((int32_t)o->refresh_rate - (int32_t)out->wlr_output->refresh) > 1000 ||
+            o->scale != out->wlr_output->scale ||
+            o->transform != out->wlr_output->transform) {
           output_initialize(out->wlr_output, o);
         }
 

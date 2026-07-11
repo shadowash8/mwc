@@ -63,6 +63,7 @@ struct output_config {
   uint32_t x;
   uint32_t y;
   double scale;
+  enum wl_output_transform transform;
 };
 
 struct workspace_config {
