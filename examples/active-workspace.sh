@@ -10,7 +10,7 @@ ashwc-ipc subscribe | while read -r line; do
     # we extract the arguments and take the second one - index and third one - output
     number=$(echo "$line" | cut -d$(printf '\x1E') -f2)
     output=$(echo "$line" | cut -d$(printf '\x1E') -f3)
-    if [ "$output" == $1 ]; then
+    if [ "$output" == "$1" ]; then
       echo "workspace $number"
     fi
   fi
