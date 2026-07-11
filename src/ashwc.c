@@ -32,6 +32,7 @@
 #include "wlr/types/wlr_xcursor_manager.h"
 #include "wlr/types/wlr_xdg_decoration_v1.h"
 #include "wlr/types/wlr_xdg_output_v1.h"
+#include "wlr/types/wlr_output_management_v1.h"
 #include "wlr/util/log.h"
 #include <stdint.h>
 #include <stdio.h>
@@ -357,6 +358,12 @@ int main(int argc, char *argv[]) {
                 &server.request_xdg_decoration);
 
   wlr_xdg_output_manager_v1_create(server.wl_display, server.output_layout);
+  server.output_manager = wlr_output_manager_v1_create(server.wl_display);
+  server.output_manager_apply.notify = output_manager_handle_apply;
+  wl_signal_add(&server.output_manager->events.apply, &server.output_manager_apply);
+  server.output_manager_test.notify = output_manager_handle_test;
+  wl_signal_add(&server.output_manager->events.test, &server.output_manager_test);
+
   wlr_viewporter_create(server.wl_display);
   wlr_presentation_create(server.wl_display, server.backend, 1);
 

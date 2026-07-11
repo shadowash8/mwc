@@ -5,6 +5,7 @@
 #include "config.h"
 #include "ipc.h"
 #include "layout.h"
+#include "layer_surface.h"
 #include "pointer.h"
 #include "rendering.h"
 #include "toplevel.h"
@@ -51,6 +52,9 @@ void server_handle_new_output(struct wl_listener *listener, void *data) {
 
   output->request_state.notify = output_handle_request_state;
   wl_signal_add(&wlr_output->events.request_state, &output->request_state);
+
+  output->commit.notify = output_handle_commit;
+  wl_signal_add(&wlr_output->events.commit, &output->commit);
 
   output->destroy.notify = output_handle_destroy;
   wl_signal_add(&wlr_output->events.destroy, &output->destroy);
@@ -100,6 +104,8 @@ void server_handle_new_output(struct wl_listener *listener, void *data) {
       wlr_scene_output_create(server.scene, output->wlr_output);
   struct wlr_box output_box = output_add_to_layout(output, output_config);
 
+  output_update_manager_config();
+
   /* if there were some existing workspaces then we reconfigure them */
   if (found) {
     struct ashwc_workspace *w;
@@ -140,6 +146,97 @@ void server_handle_new_output(struct wl_listener *listener, void *data) {
   if (server.active_workspace == NULL) {
     server.active_workspace = output->active_workspace;
   }
+}
+
+static bool output_manager_apply_config(struct wlr_output_configuration_v1 *config,
+                                        bool test_only) {
+  struct wlr_output_configuration_head_v1 *head;
+  bool ok = true;
+
+  wl_list_for_each(head, &config->heads, link) {
+    struct wlr_output *wlr_output = head->state.output;
+
+    struct wlr_output_state state;
+    wlr_output_state_init(&state);
+    wlr_output_state_set_enabled(&state, head->state.enabled);
+
+    if (head->state.enabled) {
+      if (head->state.mode != NULL) {
+        wlr_output_state_set_mode(&state, head->state.mode);
+      } else {
+        wlr_output_state_set_custom_mode(&state, head->state.custom_mode.width,
+                                         head->state.custom_mode.height,
+                                         head->state.custom_mode.refresh);
+      }
+      wlr_output_state_set_scale(&state, head->state.scale);
+      wlr_output_state_set_transform(&state, head->state.transform);
+      wlr_output_state_set_adaptive_sync_enabled(
+          &state, head->state.adaptive_sync_enabled);
+    }
+
+    if (test_only) {
+      ok &= wlr_output_test_state(wlr_output, &state);
+    } else {
+      ok &= wlr_output_commit_state(wlr_output, &state);
+
+      if (ok && head->state.enabled) {
+        /* reposition it in your existing layout -- this also moves the
+         * scene output automatically, since server.scene_layout tracks
+         * server.output_layout */
+        wlr_output_layout_add(server.output_layout, wlr_output, head->state.x,
+                              head->state.y);
+      }
+    }
+
+    wlr_output_state_finish(&state);
+  }
+
+  return ok;
+}
+
+void output_manager_handle_test(struct wl_listener *listener, void *data) {
+  struct wlr_output_configuration_v1 *config = data;
+
+  bool ok = output_manager_apply_config(config, true);
+  if (ok) {
+    wlr_output_configuration_v1_send_succeeded(config);
+  } else {
+    wlr_output_configuration_v1_send_failed(config);
+  }
+  wlr_output_configuration_v1_destroy(config);
+}
+
+void output_manager_handle_apply(struct wl_listener *listener, void *data) {
+  struct wlr_output_configuration_v1 *config = data;
+
+  bool ok = output_manager_apply_config(config, false);
+  if (ok) {
+    wlr_output_configuration_v1_send_succeeded(config);
+  } else {
+    wlr_output_configuration_v1_send_failed(config);
+  }
+  wlr_output_configuration_v1_destroy(config);
+
+  output_update_manager_config();
+}
+
+void output_update_manager_config(void) {
+  struct wlr_output_configuration_v1 *config = wlr_output_configuration_v1_create();
+
+  struct ashwc_output *output;
+  wl_list_for_each(output, &server.outputs, link) {
+    struct wlr_output_configuration_head_v1 *head =
+        wlr_output_configuration_head_v1_create(config, output->wlr_output);
+
+    struct wlr_box box;
+    wlr_output_layout_get_box(server.output_layout, output->wlr_output, &box);
+    if (!wlr_box_empty(&box)) {
+      head->state.x = box.x;
+      head->state.y = box.y;
+    }
+  }
+
+  wlr_output_manager_v1_set_configuration(server.output_manager, config);
 }
 
 struct ashwc_workspace *
@@ -444,6 +541,39 @@ void output_handle_request_state(struct wl_listener *listener, void *data) {
   wlr_output_commit_state(output->wlr_output, event->state);
 }
 
+void output_handle_commit(struct wl_listener *listener, void *data) {
+  struct ashwc_output *output = wl_container_of(listener, output, commit);
+  struct wlr_output_event_commit *event = data;
+
+  if (event->state->committed & (WLR_OUTPUT_STATE_MODE |
+                                  WLR_OUTPUT_STATE_SCALE |
+                                  WLR_OUTPUT_STATE_TRANSFORM)) {
+    output_reconfigure(output);
+  }
+}
+
+void output_reconfigure(struct ashwc_output *output) {
+  if (output->blur != NULL) {
+    wlr_scene_optimized_blur_set_size(output->blur, output->wlr_output->width,
+                                      output->wlr_output->height);
+
+    struct wlr_box output_box;
+    wlr_output_layout_get_box(server.output_layout, output->wlr_output,
+                              &output_box);
+    wlr_scene_node_set_position(&output->blur->node, output_box.x,
+                                output_box.y);
+  }
+
+  layer_surfaces_commit(output);
+
+  struct ashwc_workspace *w;
+  wl_list_for_each(w, &output->workspaces, link) {
+    if (w != output->active_workspace) {
+      layout_set_pending_state(w);
+    }
+  }
+}
+
 void output_handle_destroy(struct wl_listener *listener, void *data) {
   struct ashwc_output *output = wl_container_of(listener, output, destroy);
 
@@ -481,10 +611,16 @@ void output_handle_destroy(struct wl_listener *listener, void *data) {
 
   wl_list_remove(&output->frame.link);
   wl_list_remove(&output->request_state.link);
+  wl_list_remove(&output->commit.link);
   wl_list_remove(&output->destroy.link);
   wl_list_remove(&output->link);
 
   free(output);
 }
 
-void output_destroy(void) { wl_list_remove(&server.new_output.link); }
+void output_destroy(void) {
+  wl_list_remove(&server.new_output.link);
+  wl_list_remove(&server.new_output.link);
+  wl_list_remove(&server.output_manager_apply.link);
+  wl_list_remove(&server.output_manager_test.link);
+}

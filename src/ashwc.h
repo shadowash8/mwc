@@ -12,6 +12,7 @@
 #include <wlr/types/wlr_keyboard_shortcuts_inhibit_v1.h>
 #include <wlr/types/wlr_pointer_constraints_v1.h>
 #include <wlr/types/wlr_relative_pointer_v1.h>
+#include <wlr/types/wlr_output_management_v1.h>
 #include <wlr/types/wlr_server_decoration.h>
 #include <wlr/util/box.h>
 
@@ -118,6 +119,10 @@ struct ashwc_server {
   struct wlr_output_layout *output_layout;
   struct wl_list outputs;
   struct wl_listener new_output;
+
+  struct wlr_output_manager_v1 *output_manager;
+  struct wl_listener output_manager_apply;
+  struct wl_listener output_manager_test;
 
   struct wlr_xdg_decoration_manager_v1 *xdg_decoration_manager;
   struct wl_listener request_xdg_decoration;

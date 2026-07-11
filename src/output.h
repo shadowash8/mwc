@@ -28,11 +28,22 @@ struct ashwc_output {
   struct wlr_scene_rect *session_lock_rect;
 
   struct wl_listener frame;
+  struct wl_listener commit;
   struct wl_listener request_state;
   struct wl_listener destroy;
 };
 
 void server_handle_new_output(struct wl_listener *listener, void *data);
+
+void output_handle_commit(struct wl_listener *listener, void *data);
+
+void output_reconfigure(struct ashwc_output *output);
+
+void output_manager_handle_test(struct wl_listener *listener, void *data);
+
+void output_manager_handle_apply(struct wl_listener *listener, void *data);
+
+void output_update_manager_config(void);
 
 struct wlr_box output_add_to_layout(struct ashwc_output *output,
                                     struct output_config *config);
