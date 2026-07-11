@@ -271,8 +271,11 @@ void ipc_handle_simple(char *request, int fd) {
       len++;
     }
   } else {
-    message = "invalid request\n";
-    len = strlen(message);
+    const char *invalid = "invalid request\n";
+    write(fd, invalid, strlen(invalid));
+    free(message);
+    close(fd);
+    return;
   }
 
   write(fd, message, len);
@@ -292,6 +295,8 @@ void *ipc_run(void *data) {
   int fd = socket(AF_UNIX, SOCK_STREAM, 0);
   if (fd == -1)
     goto no_close;
+
+  unlink(IPC_PATH);
 
   struct sockaddr_un address = {0};
   address.sun_family = AF_UNIX;
