@@ -288,5 +288,6 @@ workspace_find_closest_floating_toplevel(struct ashwc_workspace *workspace,
     return min_x;
   case ASHWC_RIGHT:
     return max_x;
+  default: return NULL;
   }
 }

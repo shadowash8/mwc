@@ -336,6 +336,7 @@ struct wlr_scene_tree *layer_get_scene(enum zwlr_layer_shell_v1_layer layer) {
     return server.top_tree;
   case ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY:
     return server.overlay_tree;
+  default: return NULL;
   }
 }
 
@@ -350,6 +351,7 @@ struct wl_list *layer_get_list(struct ashwc_output *output,
     return &output->layers.top;
   case ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY:
     return &output->layers.overlay;
+  default: return NULL;
   }
 }
 

@@ -538,9 +538,10 @@ bool config_handle_value(struct ashwc_config *c, char *keyword, char **args,
       config_free_args(args, arg_count);
       return false;
     }
-    c->pointer_acceleration = atoi(args[0])
-                                  ? LIBINPUT_CONFIG_ACCEL_PROFILE_ADAPTIVE
-                                  : LIBINPUT_CONFIG_ACCEL_PROFILE_FLAT;
+    if (atoi(args[0]) == 0)
+      c->pointer_acceleration = LIBINPUT_CONFIG_ACCEL_PROFILE_FLAT;
+    else
+      c->pointer_acceleration = LIBINPUT_CONFIG_ACCEL_PROFILE_ADAPTIVE;
   } else if (strcmp(keyword, "pointer") == 0) {
     if (arg_count < 3)
       goto invalid;

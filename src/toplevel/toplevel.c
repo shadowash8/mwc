@@ -1009,6 +1009,7 @@ toplevel_find_closest_floating_on_workspace(struct ashwc_toplevel *toplevel,
     }
     return min;
   }
+  default: return NULL;
   }
 }
 
