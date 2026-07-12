@@ -2,9 +2,9 @@
 
 #include <scenefx/types/wlr_scene.h>
 
-#include "keyboard.h"
-#include "pointer.h"
-#include "session_lock.h"
+#include "keyboard/keyboard.h"
+#include "pointer/pointer.h"
+#include "session_lock/session_lock.h"
 
 #include <wayland-server-protocol.h>
 #include <wlr/types/wlr_cursor_shape_v1.h>

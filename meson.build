@@ -37,25 +37,25 @@ foreach f : protocol_files
 endforeach
 
 src = [
-  'src/config.c',
-  'src/decoration.c',
-  'src/dnd.c',
-  'src/gamma_control.c',
-  'src/helpers.c',
-  'src/ipc.c',
-  'src/keybinds.c',
-  'src/keyboard.c',
-  'src/layer_surface.c',
-  'src/layout.c',
   'src/ashwc.c',
-  'src/output.c',
-  'src/pointer.c',
-  'src/popup.c',
-  'src/rendering.c',
-  'src/session_lock.c',
-  'src/something.c',
-  'src/toplevel.c',
-  'src/workspace.c'
+  'src/config/config.c',
+  'src/decoration/decoration.c',
+  'src/dnd/dnd.c',
+  'src/gamma_control/gamma_control.c',
+  'src/helpers/helpers.c',
+  'src/ipc/ipc.c',
+  'src/keybinds/keybinds.c',
+  'src/keyboard/keyboard.c',
+  'src/layer_surface/layer_surface.c',
+  'src/layout/layout.c',
+  'src/output/output.c',
+  'src/pointer/pointer.c',
+  'src/popup/popup.c',
+  'src/rendering/rendering.c',
+  'src/session_lock/session_lock.c',
+  'src/something/something.c',
+  'src/toplevel/toplevel.c',
+  'src/workspace/workspace.c'
 ]
 
 inc = [
