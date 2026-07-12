@@ -25,8 +25,6 @@ void layout_monocle(struct ashwc_workspace *);
 
 void layout_set_pending_state(struct ashwc_workspace *);
 
-void layout_set_pending_state(struct ashwc_workspace *workspace);
-
 /* this function assumes they are in the same workspace and
  * that t2 comes after t1 if in the same list */
 void layout_swap_tiled_toplevels(struct ashwc_toplevel *t1,
@@ -47,8 +45,6 @@ struct ashwc_toplevel *layout_monocle_next(struct ashwc_workspace *workspace,
 
 struct ashwc_toplevel *layout_monocle_prev(struct ashwc_workspace *workspace,
                                            struct ashwc_toplevel *current);
-
-void layout_monocle_swap(struct ashwc_toplevel *a, struct ashwc_toplevel *b);
 
 struct ashwc_toplevel *
 layout_grid_find_neighbor(struct ashwc_workspace *workspace,
