@@ -38,3 +38,9 @@ void toplevel_move_to_workspace(struct ashwc_toplevel *toplevel,
 struct ashwc_toplevel *
 workspace_find_closest_floating_toplevel(struct ashwc_workspace *workspace,
                                          enum ashwc_direction side);
+
+void workspace_manager_handle_commit(struct wl_listener *listener,
+                                     void *data);
+
+void workspace_manager_handle_destroy(struct wl_listener *listener,
+                                      void *data);

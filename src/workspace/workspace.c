@@ -319,3 +319,41 @@ workspace_find_closest_floating_toplevel(struct ashwc_workspace *workspace,
   default: return NULL;
   }
 }
+
+void workspace_manager_handle_commit(struct wl_listener *listener,
+                                     void *data) {
+    struct wlr_ext_workspace_v1_commit_event *event = data;
+
+    struct wlr_ext_workspace_v1_request *request;
+
+    wl_list_for_each(request, event->requests, link) {
+        switch (request->type) {
+
+        case WLR_EXT_WORKSPACE_V1_REQUEST_ACTIVATE: {
+            struct ashwc_output *output;
+            wl_list_for_each(output, &server.outputs, link) {
+
+                struct ashwc_workspace *workspace;
+                wl_list_for_each(workspace, &output->workspaces, link) {
+
+                    if (workspace->ext_workspace ==
+                        request->activate.workspace) {
+                        change_workspace(workspace, false);
+                        break;
+                    }
+                }
+            }
+            break;
+        }
+
+        default:
+            break;
+        }
+    }
+}
+
+void workspace_manager_handle_destroy(struct wl_listener *listener,
+                                      void *data) {
+    wl_list_remove(&server.workspace_manager_commit.link);
+    wl_list_remove(&server.workspace_manager_destroy.link);
+}

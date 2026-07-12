@@ -246,8 +246,19 @@ int main(int argc, char *argv[]) {
       wlr_scene_attach_output_layout(server.scene, server.output_layout);
 
 
+  /* Create a workspace manager */
   server.workspace_manager =
     wlr_ext_workspace_manager_v1_create(server.wl_display, 1);
+
+  server.workspace_manager_commit.notify =
+    workspace_manager_handle_commit;
+  wl_signal_add(&server.workspace_manager->events.commit,
+                &server.workspace_manager_commit);
+
+  server.workspace_manager_destroy.notify =
+    workspace_manager_handle_destroy;
+  wl_signal_add(&server.workspace_manager->events.destroy,
+                &server.workspace_manager_destroy);
 
   /* create all the scenes in the correct order */
   server.background_tree = wlr_scene_tree_create(&server.scene->tree);
