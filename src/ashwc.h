@@ -46,6 +46,7 @@ struct ashwc_server {
   struct wlr_scene_output_layout *scene_layout;
 
   struct wlr_scene_tree *floating_tree;
+  struct wlr_scene_tree *sticky_tree;
   struct wlr_scene_tree *tiled_tree;
   struct wlr_scene_tree *background_tree;
   struct wlr_scene_tree *bottom_tree;

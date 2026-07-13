@@ -622,6 +622,15 @@ void keybind_focused_toplevel_toggle_floating(void *data) {
   layout_set_pending_state(toplevel->workspace);
 }
 
+void keybind_focused_toplevel_toggle_sticky(void *data) {
+  struct ashwc_toplevel *toplevel = server.focused_toplevel;
+
+  if (!toplevel)
+    return;
+
+  toplevel_toggle_sticky(toplevel);
+}
+
 void keybind_focused_toplevel_toggle_fullscreen(void *data) {
   struct ashwc_toplevel *toplevel = server.focused_toplevel;
   if (toplevel == NULL || toplevel == server.grabbed_toplevel)

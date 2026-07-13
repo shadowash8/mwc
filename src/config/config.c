@@ -152,6 +152,10 @@ bool config_add_window_rule(struct ashwc_config *c, char *app_id_regex,
     struct window_rule_float *window_rule = calloc(1, sizeof(*window_rule));
     window_rule->condition = condition;
     wl_list_insert(&c->window_rules.floating, &window_rule->link);
+  } else if (strcmp(predicate, "sticky") == 0) {
+    struct window_rule_sticky *window_rule = calloc(1, sizeof(*window_rule));
+    window_rule->condition = condition;
+    wl_list_insert(&c->window_rules.sticky, &window_rule->link);
   } else if (strcmp(predicate, "size") == 0) {
     if (arg_count < 2) {
       wlr_log(WLR_ERROR, "invalid args to window_rule %s", predicate);
@@ -383,6 +387,9 @@ bool config_add_keybind(struct ashwc_config *c, char *modifiers, char *key,
   } else if (strcmp(action, "switch_floating_state") == 0 ||
              strcmp(action, "toggle_floating") == 0) {
     k->action = keybind_focused_toplevel_toggle_floating;
+  } else if (strcmp(action, "switch_sticky_state") == 0 ||
+             strcmp(action, "toggle_sticky") == 0) {
+    k->action = keybind_focused_toplevel_toggle_sticky;
   } else if (strcmp(action, "resize") == 0) {
     k->action = keybind_resize_focused_toplevel;
     k->stop = keybind_stop_resize_focused_toplevel;
@@ -1089,8 +1096,10 @@ void config_set_default_needed_params(struct ashwc_config *c) {
     wlr_log(WLR_INFO, "active_opacity not specified. using default %lf",
             c->active_opacity);
   }
-  if (!c->border_radius_corners.top_left && !c->border_radius_corners.top_right &&
-      !c->border_radius_corners.bottom_right && !c->border_radius_corners.bottom_left) {
+  if (!c->border_radius_corners.top_left &&
+      !c->border_radius_corners.top_right &&
+      !c->border_radius_corners.bottom_right &&
+      !c->border_radius_corners.bottom_left) {
     c->border_radius_corners.top_left = true;
     c->border_radius_corners.top_right = true;
     c->border_radius_corners.bottom_right = true;
@@ -1186,6 +1195,7 @@ struct ashwc_config *config_load(void) {
   wl_list_init(&c->workspaces);
   wl_list_init(&c->pointers);
   wl_list_init(&c->window_rules.floating);
+  wl_list_init(&c->window_rules.sticky);
   wl_list_init(&c->window_rules.size);
   wl_list_init(&c->window_rules.opacity);
   wl_list_init(&c->layer_rules.blur);
@@ -1230,6 +1240,18 @@ void config_destroy(struct ashwc_config *c) {
     }
     free(wrf);
   }
+
+  struct window_rule_sticky *wrst, *wrst_temp;
+  wl_list_for_each_safe(wrst, wrst_temp, &c->window_rules.sticky, link) {
+    if (wrst->condition.has_app_id_regex) {
+      regfree(&wrst->condition.app_id_regex);
+    }
+    if (wrst->condition.has_title_regex) {
+      regfree(&wrst->condition.title_regex);
+    }
+    free(wrst);
+  }
+
   struct window_rule_size *wrs, *wrs_temp;
   wl_list_for_each_safe(wrs, wrs_temp, &c->window_rules.size, link) {
     if (wrs->condition.has_app_id_regex) {
@@ -1369,7 +1391,8 @@ void config_reload() {
                                   &output_box);
 
         if (o->width != output_box.width || o->height != output_box.height ||
-            abs((int32_t)o->refresh_rate - (int32_t)out->wlr_output->refresh) > 1000 ||
+            abs((int32_t)o->refresh_rate - (int32_t)out->wlr_output->refresh) >
+                1000 ||
             o->scale != out->wlr_output->scale ||
             o->transform != out->wlr_output->transform) {
           output_initialize(out->wlr_output, o);

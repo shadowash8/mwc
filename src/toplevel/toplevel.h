@@ -24,6 +24,7 @@ struct ashwc_toplevel {
 
   bool floating;
   bool fullscreen;
+  bool sticky;
   /* if a floating toplevel becomes fullscreen, we keep its previous state here
    */
   struct wlr_box prev_geometry;
@@ -96,6 +97,8 @@ void toplevel_handle_request_maximize(struct wl_listener *listener, void *data);
 void toplevel_handle_request_fullscreen(struct wl_listener *listener,
                                         void *data);
 
+void toplevel_toggle_sticky(struct ashwc_toplevel *toplevel);
+
 void toplevel_handle_set_app_id(struct wl_listener *listener, void *data);
 
 void toplevel_handle_set_title(struct wl_listener *listener, void *data);
@@ -109,6 +112,8 @@ void toplevel_floating_size(struct ashwc_toplevel *toplevel, uint32_t *width,
                             uint32_t *height);
 
 bool toplevel_should_float(struct ashwc_toplevel *toplevel);
+
+bool toplevel_should_stick(struct ashwc_toplevel *toplevel);
 
 void cursor_jump_focused_toplevel(void);
 

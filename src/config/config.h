@@ -28,6 +28,11 @@ struct window_rule_float {
   struct wl_list link;
 };
 
+struct window_rule_sticky {
+  struct window_rule_regex condition;
+  struct wl_list link;
+};
+
 struct window_rule_size {
   struct window_rule_regex condition;
   struct wl_list link;
@@ -97,6 +102,7 @@ struct ashwc_config {
   struct wl_list workspaces;
   struct {
     struct wl_list floating;
+    struct wl_list sticky;
     struct wl_list size;
     struct wl_list opacity;
   } window_rules;

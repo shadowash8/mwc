@@ -96,13 +96,16 @@ void change_workspace(struct ashwc_workspace *workspace, bool keep_focus) {
   struct ashwc_toplevel *t;
   wl_list_for_each(t, &workspace->output->active_workspace->floating_toplevels,
                    link) {
-    wlr_scene_node_set_enabled(&t->scene_tree->node, false);
+    if (!t->sticky)
+      wlr_scene_node_set_enabled(&t->scene_tree->node, false);
   }
   wl_list_for_each(t, &workspace->output->active_workspace->masters, link) {
-    wlr_scene_node_set_enabled(&t->scene_tree->node, false);
+    if (!t->sticky)
+      wlr_scene_node_set_enabled(&t->scene_tree->node, false);
   }
   wl_list_for_each(t, &workspace->output->active_workspace->slaves, link) {
-    wlr_scene_node_set_enabled(&t->scene_tree->node, false);
+    if (!t->sticky)
+      wlr_scene_node_set_enabled(&t->scene_tree->node, false);
   }
 
   /* and show this workspace's toplevels */
@@ -112,13 +115,16 @@ void change_workspace(struct ashwc_workspace *workspace, bool keep_focus) {
     layers_under_fullscreen_set_enabled(workspace->output, false);
   } else {
     wl_list_for_each(t, &workspace->floating_toplevels, link) {
-      wlr_scene_node_set_enabled(&t->scene_tree->node, true);
+      if (!t->sticky)
+        wlr_scene_node_set_enabled(&t->scene_tree->node, true);
     }
     wl_list_for_each(t, &workspace->masters, link) {
-      wlr_scene_node_set_enabled(&t->scene_tree->node, true);
+      if (!t->sticky)
+        wlr_scene_node_set_enabled(&t->scene_tree->node, true);
     }
     wl_list_for_each(t, &workspace->slaves, link) {
-      wlr_scene_node_set_enabled(&t->scene_tree->node, true);
+      if (!t->sticky)
+        wlr_scene_node_set_enabled(&t->scene_tree->node, true);
     }
 
     if (workspace->output->active_workspace->fullscreen_toplevel != NULL) {
@@ -168,7 +174,7 @@ void toplevel_move_to_workspace(struct ashwc_toplevel *toplevel,
                                 struct ashwc_workspace *workspace) {
   assert(toplevel != NULL && workspace != NULL);
   if (toplevel == server.grabbed_toplevel || toplevel->workspace == workspace ||
-      workspace->fullscreen_toplevel != NULL)
+      workspace->fullscreen_toplevel != NULL || toplevel->sticky)
     return;
 
   struct ashwc_workspace *old_workspace = toplevel->workspace;

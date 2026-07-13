@@ -94,6 +94,10 @@ void toplevel_handle_initial_commit(struct ashwc_toplevel *toplevel) {
   /* when an xdg_surface performs an initial commit, the compositor must
    * reply with a configure so the client can map the surface. */
   toplevel->floating = toplevel_should_float(toplevel);
+  toplevel->sticky = toplevel_should_stick(toplevel);
+
+  if (toplevel->sticky)
+    toplevel->floating = true;
 
   uint32_t width, height;
   if (toplevel->floating) {
@@ -635,6 +639,17 @@ bool toplevel_should_float(struct ashwc_toplevel *toplevel) {
   return false;
 }
 
+bool toplevel_should_stick(struct ashwc_toplevel *toplevel) {
+  struct window_rule_sticky *w;
+  wl_list_for_each(w, &server.config->window_rules.sticky, link) {
+    if (toplevel_matches_window_rule(toplevel, &w->condition)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 struct ashwc_toplevel *get_pointer_focused_toplevel(void) {
   struct wlr_surface *focused_surface =
       server.seat->pointer_state.focused_surface;
@@ -880,6 +895,27 @@ void toplevel_resize(void) {
   }
 
   toplevel_set_pending_state(toplevel, new_x, new_y, new_width, new_height);
+}
+
+void toplevel_toggle_sticky(struct ashwc_toplevel *toplevel) {
+  if (!toplevel->sticky) {
+    if (!toplevel->floating) {
+      wlr_log(WLR_INFO, "only floating toplevels can be made sticky");
+      return;
+    }
+
+    toplevel->sticky = true;
+
+    wlr_scene_node_reparent(&toplevel->scene_tree->node, server.sticky_tree);
+    wlr_scene_node_set_enabled(&toplevel->scene_tree->node, true);
+    wlr_scene_node_raise_to_top(&toplevel->scene_tree->node);
+
+  } else {
+    toplevel->sticky = false;
+
+    wlr_scene_node_reparent(&toplevel->scene_tree->node, server.floating_tree);
+    wlr_scene_node_raise_to_top(&toplevel->scene_tree->node);
+  }
 }
 
 void unfocus_focused_toplevel(void) {
