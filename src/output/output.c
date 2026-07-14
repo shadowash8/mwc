@@ -635,7 +635,6 @@ void output_handle_destroy(struct wl_listener *listener, void *data) {
 
 void output_destroy(void) {
   wl_list_remove(&server.new_output.link);
-  wl_list_remove(&server.new_output.link);
   wl_list_remove(&server.output_manager_apply.link);
   wl_list_remove(&server.output_manager_test.link);
 }
