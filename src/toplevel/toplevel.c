@@ -100,8 +100,15 @@ void toplevel_handle_initial_commit(struct ashwc_toplevel *toplevel) {
     toplevel->floating = true;
 
   uint32_t width, height;
-  if (toplevel->floating) {
-    /* we lookup window rules and send a configure */
+  if (toplevel->xdg_toplevel->requested.fullscreen) {
+    struct wlr_box output_box;
+    wlr_output_layout_get_box(server.output_layout,
+                              toplevel->workspace->output->wlr_output,
+                              &output_box);
+    width = output_box.width;
+    height = output_box.height;
+    wlr_xdg_toplevel_set_fullscreen(toplevel->xdg_toplevel, true);
+  } else if (toplevel->floating) {
     toplevel_floating_size(toplevel, &width, &height);
   } else {
     struct ashwc_output *output = toplevel->workspace->output;
